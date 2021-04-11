@@ -4,16 +4,16 @@ class Image:
 
     Attributes:
         path: The path this image stored in
-        origin: Original images with rgb color
+        rgb: Original images with rgb color
         grayscale: Grayscale image
-        size: the size of image
+        percentage: the percentage of UO2 content
         thermal: Thermal Conductivity (W·m/K)
     """
 
-    def __init__(self, path, origin, grayscale, size, thermal):
+    def __init__(self, path, rgb, grayscale, percentage, thermal):
         self.path = path
-        self.origin = origin
+        self.rgb = rgb
         self.grayscale = grayscale
-        self.size = size
+        self.percentage = percentage
         self.thermal = thermal
         pass

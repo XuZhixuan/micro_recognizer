@@ -32,3 +32,26 @@ def train_test_split(x_data, y_data, validate_size=0.3, random=False):
         y_validate = y_data[split:]
 
     return x_train, x_validate, y_train, y_validate
+
+
+def transform(results_file, manifest_file, num=1):
+    """
+    加载清单转换文件，将结果文件转换为加载清单
+    Args:
+        results_file: 结果文件路径
+        manifest_file: 加载列表文件路径，新内容将追加在文件末尾
+        num: 起始文件编号，默认为1
+
+    Returns:
+
+    """
+    with open(results_file, 'r') as results:
+        with open(manifest_file, 'a') as manifest:
+            while True:
+                line = results.readline()
+                if line:
+                    new_line = str(num) + ' ' + line
+                    manifest.write(new_line)
+                    num += 1
+                else:
+                    break

@@ -9,7 +9,7 @@ class ImageLoader:
     """
 
     @staticmethod
-    def load(path, shape):
+    def load(path, box):
         """ Load one image from given path
 
         Load an image form the path
@@ -17,14 +17,20 @@ class ImageLoader:
 
         Args:
             path: A path of the image to load
-            shape: The shape of wanted image
+            box: The box of wanted image
 
         Return:
             image: An image instance
         """
-        image = Image.open('images/' + path[0])
-        image, gray = ImageLoader.pre_process(image, shape)
-        return Modules.Image(path[0], image, gray, shape, path[1])
+        image = Image.open('images/RGB' + path[0] + '.png')
+        gray = Image.open('images/GS' + path[0] + '.png')
+        return Modules.Image(
+            path[0],
+            ImageLoader.pre_process(image, box),
+            ImageLoader.pre_process(gray, box),
+            path[1],
+            path[2]
+        )
 
     @staticmethod
     def loads(manifest):
@@ -47,44 +53,35 @@ class ImageLoader:
 
         images = []
         for path in paths:
-            image = ImageLoader.load(path, (300, 300))
+            image = ImageLoader.load(path, (24, 25, 1024-26, 1024-25))
             images.append(image)
 
         return images
 
     @staticmethod
-    def pre_process(image, shape):
+    def pre_process(image, box):
         """ Process an image loaded
 
         Args:
             image: The origin image
-            shape: The shape of wanted image
+            box: The box of wanted image
 
         Returns:
             new_image: The cropped image
-            gray_image: The gray cropped image
         """
+        shape = (
+            box[2] - box[0],
+            box[3] - box[1]
+        )
+
         if image.size > shape:
-            box_height = image.size[0] - shape[0]
-            box_height = int(box_height/2)
-
-            box_width = image.size[1] - shape[1]
-            box_width = int(box_width/2)
-
-            box = (
-                box_width,
-                box_height,
-                box_width + shape[1],
-                box_height + shape[0]
-            )
             new_img = image.crop(box)
         elif image.size < shape:
             raise SizeTooSmallException(image.filename, shape, image.size)
         else:
             new_img = image
 
-        gray_image = new_img.convert('L')
-        return new_img, gray_image
+        return new_img
 
 
 class SizeTooSmallException(Exception):
@@ -112,7 +109,7 @@ class SizeTooSmallException(Exception):
 
         Return: The exception message
         """
-        return 'The size required is %d×%d, %d×%d given in '%(
+        return 'The size required is %d×%d, %d×%d given in ' % (
             self.shape_required[0], self.shape_required[1],
             self.shape_given[0], self.shape_given[1],
         ) + self.path
