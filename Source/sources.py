@@ -1,50 +1,100 @@
-from abc import abstractmethod
-
 import pickle
+import zipfile
+import re
+import os
+
+from abc import abstractmethod
 
 from Tools import ImageLoader
 
 
 class Source:
+    def __init__(self):
+        self.data = []
+        self.length = 0
+
     @abstractmethod
     def fetch(self):
         raise NotImplementedError
 
-    @abstractmethod
     def __iter__(self):
-        raise NotImplementedError
+        self.curr = 0
+        return self
 
-    @abstractmethod
     def __getitem__(self, item):
-        raise NotImplementedError
+        return self.data[item]
 
-    @abstractmethod
     def __next__(self):
-        raise NotImplementedError
+        if self.curr >= self.length:
+            raise StopIteration
+        else:
+            index = self.curr
+            self.curr += 1
+            return self.data[index]
 
-    @abstractmethod
+    def __add__(self, other):
+        self.data += other
+        return self
+
     def dump(self, path: str):
-        raise NotImplementedError
+        with open(path, 'wb') as bin_file:
+            pickle.dump(self.data, bin_file)
 
 
 class FileSource(Source):
-    def __init__(self):
-        pass
+    def __init__(self, dir_name: str):
+        super().__init__()
+        self.dir_name = dir_name
+        self.fetch()
 
     def fetch(self):
-        pass
+        # Detect the zip files presented in given dir
+        zip_files = []
+        for file in os.listdir(self.dir_name):
+            if re.match(r'(.*)\.zip', file):
+                zip_files.append(
+                    zipfile.ZipFile(self.dir_name + '/' + file)
+                )
 
-    def __iter__(self):
-        pass
+        data = []
+        # Load data from each zip file
+        for zip_file in zip_files:
+            data += self.load(zip_file)
 
-    def __getitem__(self, item):
-        pass
+        self.data = data
 
-    def __next__(self):
-        pass
+    @staticmethod
+    def load(file: zipfile.ZipFile) -> list:
+        nums = []
+        # Determine the first file in zip file
+        for name in file.namelist():
+            # Extract every file from zip file
+            file.extract(name, path='images')
+            num = re.search(r'GS(.*)\.png', name)
+            if num:
+                nums.append(
+                    int(num.group(1))
+                )
+        begin = min(nums)
+        # Determine the name of extract dir
+        dir_name = file.namelist()[0].split('/')[0]
 
-    def dump(self, path: str):
-        pass
+        # Transform the result file into a load list
+        with open('images/' + dir_name + '/result.txt', 'r') as results_file:
+            results = results_file.readlines()
+
+        manifest = []
+        for result in results:
+            result = result.split()
+            manifest.append((
+                file.filename + ':GS' + str(begin) + '.png',
+                'images/' + dir_name + '/GS' + str(begin) + '.png',
+                'images/' + dir_name + '/RGB' + str(begin) + '.png',
+                float(result[0]),
+                float(result[1]),
+            ))
+
+        return ImageLoader.loads(manifest)
 
 
 class DBSource(Source):
@@ -65,6 +115,8 @@ class DBSource(Source):
             db_name: The name of database to use
             base_url: The base url prefix append before images path
         """
+        super(DBSource, self).__init__()
+
         import pymysql
         import threading
 
@@ -80,6 +132,8 @@ class DBSource(Source):
             host=db_hostname,
             database=db_name
         )
+
+        self.base_db_url = 'mysql://' + self.connection.get_host_info().split()[-1] + '/' + db_name + '/'
 
         # Init two task threads
         self.fetcher = threading.Thread(target=self.fetch)
@@ -100,11 +154,8 @@ class DBSource(Source):
 
         self.data = ImageLoader.loads(self.manifest)
         self.length = len(self.data)
-        pass
 
     def fetch(self) -> None:
-        import re
-
         # Two cursors to perform different queries
         cursor_1 = self.connection.cursor()
         cursor_2 = self.connection.cursor()
@@ -131,11 +182,15 @@ class DBSource(Source):
                 material[
                     param[2]
                 ] = (param[3] if param[2] in [1, 2] else (self.base_url + param[7]))
-            material[0] = re.search(r'/RGB(.*).png', material[4]).group(1)
+
+            urls = material[3:]
+            material[0] = self.base_db_url + 'mtrl_info/' + str(material_id)
+            material[3] = 'images/' + material[3].split('/')[-1]
+            material[4] = 'images/' + material[4].split('/')[-1]
 
             # Push download task into the download tasks list
-            self.download_tasks.append({'url': material[3], 'path': 'images/'})
-            self.download_tasks.append({'url': material[4], 'path': 'images/'})
+            self.download_tasks.append({'url': urls[0], 'path': 'images/'})
+            self.download_tasks.append({'url': urls[1], 'path': 'images/'})
 
             # Push the material params list into the materials list
             materials.append(material)
@@ -162,28 +217,16 @@ class DBSource(Source):
             else:
                 continue
 
-    def __iter__(self):
-        self.curr = 0
-        return self
-
-    def __next__(self):
-        if self.curr >= self.length:
-            raise StopIteration
-        else:
-            data = self.data[self.curr]
-            self.curr += 1
-            return data
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-    def dump(self, path: str):
-        with open(path, 'wb') as bin_file:
-            pickle.dump(self.data, bin_file)
-
 
 class SavedSource(Source):
     def __init__(self, path: str):
+        """
+        Load data from a previously saved source.
+        Args:
+            path: The path to pickle file
+        """
+        super(SavedSource, self).__init__()
+
         self.path = path
         self.data = []
         self.fetch()
@@ -192,22 +235,3 @@ class SavedSource(Source):
     def fetch(self):
         with open(self.path, 'rb') as bin_file:
             self.data = pickle.load(bin_file)
-
-    def __iter__(self):
-        self.curr = 0
-        return self
-
-    def __next__(self):
-        if self.curr >= self.length:
-            raise StopIteration
-        else:
-            data = self.data[self.curr]
-            self.curr += 1
-            return data
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-    def dump(self, path: str):
-        with open(path, 'wb') as bin_file:
-            pickle.dump(self.data, bin_file)

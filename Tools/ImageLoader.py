@@ -1,17 +1,17 @@
 from PIL import Image
 from torchvision import transforms
 
-from typing import TypeVar
+from typing import Union, Tuple, List
 
 import Modules
+
+
+LoadList = List[Tuple[str, str, str, float, float]]
 
 
 loader = transforms.Compose([
     transforms.ToTensor()
 ])
-
-
-LoadList = TypeVar('LoadList', str, list)
 
 
 class ImageLoader:
@@ -21,8 +21,8 @@ class ImageLoader:
 
     @staticmethod
     def load(
-        num: str,
-        path: str,
+        origin: str,
+        path: Tuple[str, str],
         percentage: float,
         thermal: float,
         box: tuple
@@ -33,8 +33,8 @@ class ImageLoader:
         Then calculate its attributes
 
         Args:
-            num: The num of image
-            path: the path of the gray image to load
+            origin: The origin path of image
+            path: the paths of the image to load
             percentage: UO2 percentage
             thermal: Thermal conductivity
             box: The box of wanted image
@@ -42,10 +42,10 @@ class ImageLoader:
         Return:
             image: An image instance
         """
-        image = Image.open('images/RGB' + num + '.png')
-        gray = Image.open('images/GS' + num + '.png')
+        image = Image.open(path[0])
+        gray = Image.open(path[1])
         return Modules.Image(
-            path=path,
+            path=origin,
             rgb=ImageLoader.pre_process(image, box, 0.5),
             grayscale=ImageLoader.pre_process(gray, box, 0.5),
             percentage=float(percentage),
@@ -62,33 +62,21 @@ class ImageLoader:
         Return:
             images: A images list
         """
-        paths = []
-        if isinstance(manifest, str):
-            with open(manifest, 'r') as file:
-                while True:
-                    line = file.readline()
-                    if line:
-                        paths.append(line.split())
-                    else:
-                        break
-        else:
-            for material in manifest:
-                paths.append((
-                    material[0],
-                    material[3],
-                    material[1],
-                    material[2]
-                ))
-
         images = []
-        for path in paths:
-            image = ImageLoader.load(*path, box=(24, 25, 1024 - 26, 1024 - 25))
+        for material in manifest:
+            image = ImageLoader.load(
+                origin=material[0],
+                path=(material[1], material[2]),
+                percentage=material[3],
+                thermal=material[4],
+                box=(24, 25, 1024 - 26, 1024 - 25)
+            )
             images.append(image)
 
         return images
 
     @staticmethod
-    def pre_process(image: Image, box: tuple, size: float = 0.):
+    def pre_process(image: Image, box: tuple, size: Union[tuple, float] = .5) -> Image:
         """ Process an image loaded
 
         Args:

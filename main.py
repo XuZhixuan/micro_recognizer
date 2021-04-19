@@ -18,7 +18,7 @@ class Program:
         self.train_set = None
         self.validate_set = None
 
-        self.writer = SummaryWriter('logs/1.log')
+        self.writer = SummaryWriter('./logs/')
 
         # self.data =  DBSource(
         #     db_hostname='49.208.46.17',
@@ -82,7 +82,9 @@ class Program:
 
     def main(self):
         self.create_dataset()
-        self.train_network(5)
+        # self.writer.add_image('train_data', self.train_set[0][0], dataformats='NCHW')
+        self.writer.add_graph(self.model, self.train_set[0][0])
+        # self.train_network(5)
         pass
 
 

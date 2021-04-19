@@ -1,4 +1,6 @@
 from torchsummary import summary
+from tensorboardX import SummaryWriter
+
 from Modules import *
 
 
@@ -14,10 +16,10 @@ def debug():
     #     base_url='http://49.208.46.17:3000'
     # )
 
-    source = SavedSource('data.pkl')
-    for datum in source:
-        print('%s found' % datum.path)
-    pass
+    source = FileSource('zips')
+
+    # source = SavedSource('data.pkl')
+    source.dump('data0.pkl')
 
 
 if __name__ == '__main__':
