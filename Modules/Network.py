@@ -15,24 +15,28 @@ class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
         configs = [
+            # Conv block 1
             {'class': 'conv2d', 'args': {'in_channels': 1, 'out_channels': 16, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 16, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
+            # Conv block 2
             {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 32, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 32, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
-            {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 64, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'conv2d', 'args': {'in_channels': 64, 'out_channels': 64, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
+            # # Conv block 3
+            # {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 64, 'kernel_size': 3}},
+            # {'class': 'relu', 'args': {'inplace': True}},
+            # {'class': 'conv2d', 'args': {'in_channels': 64, 'out_channels': 64, 'kernel_size': 3}},
+            # {'class': 'relu', 'args': {'inplace': True}},
+            # {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
             {'class': 'gap', 'args': {'output_size': 20}},
             {'class': 'flatten', 'args': {}},
-            {'class': 'dense', 'args': {'in_features': 25600, 'out_features': 20}},
+            # Dense block
+            {'class': 'dense', 'args': {'in_features': 12800, 'out_features': 20}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'dense', 'args': {'in_features': 20, 'out_features': 20}},
             {'class': 'relu', 'args': {'inplace': True}},
@@ -45,6 +49,7 @@ class Network(nn.Module):
         layer_class = {
             'conv2d': nn.Conv2d,
             'maxPool2d': nn.MaxPool2d,
+            'bn2d': nn.BatchNorm2d,
             'gap': nn.AdaptiveAvgPool2d,
             'dense': nn.Linear,
             'flatten': nn.Flatten,

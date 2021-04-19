@@ -34,7 +34,7 @@ def train_test_split(x_data, y_data, validate_size=0.3, random=False):
     return x_train, x_validate, y_train, y_validate
 
 
-def transform(results_file, manifest_file, num=1):
+def transform_manifest(results_file, manifest_file, num=1):
     """
     加载清单转换文件，将结果文件转换为加载清单
     Args:
@@ -55,3 +55,27 @@ def transform(results_file, manifest_file, num=1):
                     num += 1
                 else:
                     break
+
+
+def unwrap_dataset(filename: str, dir_name: str = ''):
+    import zipfile 
+
+    file = zipfile.ZipFile(filename)
+
+
+def load_raw_dataset(dir_name: str):
+    from Tools import ImageLoader
+
+
+def load_dataset(filename: str = './dataset.pkl'):
+    import pickle
+    with open(filename, 'rb') as bin_file:
+        dataset = pickle.load(bin_file)
+    return dataset
+
+
+def save_dataset(dataset: list, filename: str = './dataset.pkl'):
+    import pickle
+    with open(filename, 'wb') as bin_file:
+        pickle.dump(dataset, bin_file)
+    pass

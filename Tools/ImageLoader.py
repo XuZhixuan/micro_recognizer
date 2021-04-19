@@ -1,6 +1,17 @@
 from PIL import Image
+from torchvision import transforms
+
+from typing import TypeVar
 
 import Modules
+
+
+loader = transforms.Compose([
+    transforms.ToTensor()
+])
+
+
+LoadList = TypeVar('LoadList', str, list)
 
 
 class ImageLoader:
@@ -9,31 +20,40 @@ class ImageLoader:
     """
 
     @staticmethod
-    def load(path, box):
+    def load(
+        num: str,
+        path: str,
+        percentage: float,
+        thermal: float,
+        box: tuple
+    ) -> Modules.Image:
         """ Load one image from given path
 
         Load an image form the path
         Then calculate its attributes
 
         Args:
-            path: A path of the image to load
+            num: The num of image
+            path: the path of the gray image to load
+            percentage: UO2 percentage
+            thermal: Thermal conductivity
             box: The box of wanted image
 
         Return:
             image: An image instance
         """
-        image = Image.open('images/RGB' + path[0] + '.png')
-        gray = Image.open('images/GS' + path[0] + '.png')
+        image = Image.open('images/RGB' + num + '.png')
+        gray = Image.open('images/GS' + num + '.png')
         return Modules.Image(
-            path[0],
-            ImageLoader.pre_process(image, box),
-            ImageLoader.pre_process(gray, box),
-            path[1],
-            path[2]
+            path=path,
+            rgb=ImageLoader.pre_process(image, box, 0.5),
+            grayscale=ImageLoader.pre_process(gray, box, 0.5),
+            percentage=float(percentage),
+            thermal=float(thermal)
         )
 
     @staticmethod
-    def loads(manifest):
+    def loads(manifest: LoadList) -> list:
         """ Load images from a paths list
 
         Arg:
@@ -43,26 +63,36 @@ class ImageLoader:
             images: A images list
         """
         paths = []
-        with open(manifest, 'r') as file:
-            while True:
-                line = file.readline()
-                if line:
-                    paths.append(tuple(line.split()))
-                else:
-                    break
+        if isinstance(manifest, str):
+            with open(manifest, 'r') as file:
+                while True:
+                    line = file.readline()
+                    if line:
+                        paths.append(line.split())
+                    else:
+                        break
+        else:
+            for material in manifest:
+                paths.append((
+                    material[0],
+                    material[3],
+                    material[1],
+                    material[2]
+                ))
 
         images = []
         for path in paths:
-            image = ImageLoader.load(path, (24, 25, 1024-26, 1024-25))
+            image = ImageLoader.load(*path, box=(24, 25, 1024 - 26, 1024 - 25))
             images.append(image)
 
         return images
 
     @staticmethod
-    def pre_process(image, box):
+    def pre_process(image: Image, box: tuple, size: float = 0.):
         """ Process an image loaded
 
         Args:
+            size: Resizing image
             image: The origin image
             box: The box of wanted image
 
@@ -81,7 +111,13 @@ class ImageLoader:
         else:
             new_img = image
 
-        return new_img
+        if size:
+            if isinstance(size, tuple):
+                new_img = new_img.resize(size, Image.ANTIALIAS)
+            elif isinstance(size, float):
+                new_img = new_img.resize((int(shape[0] * size), int(shape[1] * size)), Image.ANTIALIAS)
+
+        return loader(new_img).unsqueeze(0).to('cuda')
 
 
 class SizeTooSmallException(Exception):
@@ -92,6 +128,7 @@ class SizeTooSmallException(Exception):
         shape_required: The shape crop to
         shape_given: The shape of given image
     """
+
     def __init__(self, path, shape_required, shape_given):
         """ Initializer of exception class
 
