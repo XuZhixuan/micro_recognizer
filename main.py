@@ -28,7 +28,42 @@ class Program:
         # )
 
         self.source = SavedSource('data1.pkl')
-        self.model = Modules.Network()
+
+        config = [
+            # Conv block 1
+            {'class': 'bn2d', 'args': {'num_features': 1}},
+            {'class': 'conv2d', 'args': {'in_channels': 1, 'out_channels': 16, 'kernel_size': 3}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'bn2d', 'args': {'num_features': 16}},
+            {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 16, 'kernel_size': 3}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
+            # Conv block 2
+            {'class': 'bn2d', 'args': {'num_features': 16}},
+            {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 32, 'kernel_size': 3}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'bn2d', 'args': {'num_features': 32}},
+            {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 32, 'kernel_size': 3}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
+            # # Conv block 3
+            # {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 64, 'kernel_size': 3}},
+            # {'class': 'relu', 'args': {'inplace': True}},
+            # {'class': 'conv2d', 'args': {'in_channels': 64, 'out_channels': 64, 'kernel_size': 3}},
+            # {'class': 'relu', 'args': {'inplace': True}},
+            # {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
+            {'class': 'gap', 'args': {'output_size': 20}},
+            {'class': 'flatten', 'args': {}},
+            # Dense block
+            {'class': 'dense', 'args': {'in_features': 12800, 'out_features': 20}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 20}},
+            {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 10}},
+            # {'class': 'softMax', 'args': {}}
+        ]
+
+        self.model = Modules.Network(config)
         self.loss_function = torch.nn.MSELoss()
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=.001)
 
