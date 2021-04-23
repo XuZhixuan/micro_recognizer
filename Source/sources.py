@@ -3,6 +3,7 @@ import zipfile
 import re
 import os
 
+from typing import List, Tuple
 from abc import abstractmethod
 
 from Tools import ImageLoader
@@ -235,3 +236,55 @@ class SavedSource(Source):
     def fetch(self):
         with open(self.path, 'rb') as bin_file:
             self.data = pickle.load(bin_file)
+
+
+class TestSource(Source):
+    resources = [
+        ('tests/train-images-idx3-ubyte', 'tests/train-labels-idx1-ubyte'),
+        ('tests/t10k-images-idx3-ubyte', 'tests/t10k-labels-idx1-ubyte')
+    ]
+
+    def __init__(self):
+        super(TestSource, self).__init__()
+        self.data = self.fetch()
+        pass
+
+    def fetch(self) -> List[Tuple]:
+        import struct
+        from PIL import Image
+        from Tools.ImageLoader import loader
+
+        data = []
+
+        for images, labels in self.resources:
+            with open(images, 'br') as img_files, open(labels, 'br') as lab_files:
+                # Read the magic number
+                img_files.read(4)
+                lab_files.read(8)
+                # Read the file number
+                num = img_files.read(4)
+                num = struct.unpack('>i', num)[0]
+                # Read the size of image
+                height = struct.unpack('>i', img_files.read(4))[0]
+                width = struct.unpack('>i', img_files.read(4))[0]
+                size = width * height
+
+                padding = b'\x00\x00\x00'
+                # Read the images
+                for i in range(num):
+                    img = img_files.read(size)
+                    lab = lab_files.read(1)
+                    # Convert format
+                    label = struct.unpack('>i', padding + lab)[0]
+                    image = Image.frombytes(
+                        mode='L',
+                        size=(28, 28),
+                        data=img
+                    )
+
+                    data.append((
+                        loader(image).unsqueeze(0).cuda(),
+                        label
+                    ))
+
+        return data

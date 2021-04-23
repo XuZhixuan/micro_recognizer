@@ -16,14 +16,18 @@ class Network(nn.Module):
         super(Network, self).__init__()
         configs = [
             # Conv block 1
+            {'class': 'bn2d', 'args': {'num_features': 1}},
             {'class': 'conv2d', 'args': {'in_channels': 1, 'out_channels': 16, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'bn2d', 'args': {'num_features': 16}},
             {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 16, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
             # Conv block 2
+            {'class': 'bn2d', 'args': {'num_features': 16}},
             {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 32, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
+            {'class': 'bn2d', 'args': {'num_features': 32}},
             {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 32, 'kernel_size': 3}},
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
@@ -40,7 +44,8 @@ class Network(nn.Module):
             {'class': 'relu', 'args': {'inplace': True}},
             {'class': 'dense', 'args': {'in_features': 20, 'out_features': 20}},
             {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 1}}
+            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 10}},
+            # {'class': 'softMax', 'args': {}}
         ]
         self.net = None
         self._make_layers(configs)
@@ -53,7 +58,8 @@ class Network(nn.Module):
             'gap': nn.AdaptiveAvgPool2d,
             'dense': nn.Linear,
             'flatten': nn.Flatten,
-            'relu': nn.ReLU
+            'relu': nn.ReLU,
+            'softMax': nn.Softmax
         }
         layers = []
         for config in configs:

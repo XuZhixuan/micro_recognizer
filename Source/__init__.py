@@ -1,5 +1,5 @@
-from .sources import Source, DBSource, FileSource, SavedSource
+from .sources import Source, DBSource, FileSource, SavedSource, TestSource
 
 __all__ = [
-    'Source', 'DBSource', 'FileSource', 'SavedSource'
+    'Source', 'DBSource', 'FileSource', 'SavedSource', 'TestSource'
 ]
