@@ -105,7 +105,7 @@ class Program:
             self.model.train()
             train_loss = 0.
             for (x, y) in zip(self.train_set[0], self.train_set[1]):
-                out = self.model.net(x.cuda())
+                out = self.model(x.cuda())
                 loss = self.loss_function(out, y)
                 train_loss += loss.data.item()
 
@@ -125,7 +125,7 @@ class Program:
             # Init a R2score instance
             r2score = reg.R2Score(device='cuda')
             for (x, y) in zip(self.validate_set[0], self.validate_set[1]):
-                out = self.model.net(x.cuda())
+                out = self.model(x.cuda())
                 loss = self.loss_function(out, y)
                 val_loss += loss.data.item()
                 r2score.update((out, y))
@@ -137,7 +137,7 @@ class Program:
             self.writer.add_scalar('test_r2', r2score.compute(), epoch)
             self.writer.add_scalar('Test_Loss', val_loss, epoch)
 
-        torch.save(self.model.state_dict(), './0.pl')
+        torch.save(self.model, './0.pl')
 
     def main(self):
         self.create_dataset()
@@ -145,5 +145,6 @@ class Program:
 
 
 if __name__ == '__main__':
+    before()
     app = Program()
     app.main()

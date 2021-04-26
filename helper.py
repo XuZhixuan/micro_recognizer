@@ -42,3 +42,15 @@ def dump_json(filename: str, data: Union[List, Dict]) -> None:
 
     with open(filename, 'w') as json_file:
         json.dump(data, json_file)
+
+
+def before():
+    import os
+    import main
+    work_dir = os.getcwd()
+    file_dir = os.path.dirname(main.__file__)
+    print('[  INFO  ] Current working dir: ', work_dir)
+    if work_dir != file_dir:
+        print('[  WARN  ] Not running in program dir, changing...')
+        os.chdir(file_dir)
+        print('[   OK   ] Now running in: ', os.getcwd())
