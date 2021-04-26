@@ -54,3 +54,8 @@ def before():
         print('[  WARN  ] Not running in program dir, changing...')
         os.chdir(file_dir)
         print('[   OK   ] Now running in: ', os.getcwd())
+
+
+def time_name():
+    import datetime
+    return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')

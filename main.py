@@ -27,41 +27,10 @@ class Program:
         #     base_url='http://49.208.46.17:3000'
         # )
 
-        self.source = SavedSource('data1.pkl')
+        self.source = FileSource('./zips')
+        self.source.dump('./data-' + time_name() + '.pkl')
 
-        config = [
-            # Conv block 1
-            {'class': 'bn2d', 'args': {'num_features': 1}},
-            {'class': 'conv2d', 'args': {'in_channels': 1, 'out_channels': 16, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'bn2d', 'args': {'num_features': 16}},
-            {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 16, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
-            # Conv block 2
-            {'class': 'bn2d', 'args': {'num_features': 16}},
-            {'class': 'conv2d', 'args': {'in_channels': 16, 'out_channels': 32, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'bn2d', 'args': {'num_features': 32}},
-            {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 32, 'kernel_size': 3}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
-            # # Conv block 3
-            # {'class': 'conv2d', 'args': {'in_channels': 32, 'out_channels': 64, 'kernel_size': 3}},
-            # {'class': 'relu', 'args': {'inplace': True}},
-            # {'class': 'conv2d', 'args': {'in_channels': 64, 'out_channels': 64, 'kernel_size': 3}},
-            # {'class': 'relu', 'args': {'inplace': True}},
-            # {'class': 'maxPool2d', 'args': {'kernel_size': 2}},
-            {'class': 'gap', 'args': {'output_size': 20}},
-            {'class': 'flatten', 'args': {}},
-            # Dense block
-            {'class': 'dense', 'args': {'in_features': 12800, 'out_features': 20}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 20}},
-            {'class': 'relu', 'args': {'inplace': True}},
-            {'class': 'dense', 'args': {'in_features': 20, 'out_features': 10}},
-            # {'class': 'softMax', 'args': {}}
-        ]
+        config = load_json('vgg8.json')
 
         self.model = Modules.Network(config)
         self.loss_function = torch.nn.MSELoss()
@@ -83,7 +52,7 @@ class Program:
                     image.grayscale,
                     torch.from_numpy(
                         numpy.array((image.thermal - low) / inter)  # Normalize the thermal conductivity
-                    ).view(1, 1).cuda()
+                    ).view(1, 1).float().cuda()
                 )
             )
 
@@ -104,7 +73,8 @@ class Program:
             print('Epoch: %d' % epoch)
             self.model.train()
             train_loss = 0.
-            for (x, y) in zip(self.train_set[0], self.train_set[1]):
+            for i, datum in enumerate(self.train_set):
+                x, y = datum
                 out = self.model(x.cuda())
                 loss = self.loss_function(out, y)
                 train_loss += loss.data.item()
@@ -124,7 +94,8 @@ class Program:
             val_loss = 0.
             # Init a R2score instance
             r2score = reg.R2Score(device='cuda')
-            for (x, y) in zip(self.validate_set[0], self.validate_set[1]):
+            for i, datum in enumerate(self.validate_set):
+                x, y = datum
                 out = self.model(x.cuda())
                 loss = self.loss_function(out, y)
                 val_loss += loss.data.item()
@@ -137,7 +108,7 @@ class Program:
             self.writer.add_scalar('test_r2', r2score.compute(), epoch)
             self.writer.add_scalar('Test_Loss', val_loss, epoch)
 
-        torch.save(self.model, './0.pl')
+        torch.save(self.model, './model-' + time_name() + '.pl')
 
     def main(self):
         self.create_dataset()
