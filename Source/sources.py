@@ -47,6 +47,7 @@ class FileSource(Source):
         super().__init__()
         self.dir_name = dir_name
         self.fetch()
+        self.length = len(self.data)
 
     def fetch(self):
         # Detect the zip files presented in given dir
@@ -76,7 +77,8 @@ class FileSource(Source):
                 nums.append(
                     int(num.group(1))
                 )
-        begin = min(nums)
+
+        start = min(nums)
         # Determine the name of extract dir
         dir_name = file.namelist()[0].split('/')[0]
 
@@ -85,12 +87,12 @@ class FileSource(Source):
             results = results_file.readlines()
 
         manifest = []
-        for result in results:
+        for i, result in enumerate(results, start):
             result = result.split()
             manifest.append((
-                file.filename + ':GS' + str(begin) + '.png',
-                'images/' + dir_name + '/GS' + str(begin) + '.png',
-                'images/' + dir_name + '/RGB' + str(begin) + '.png',
+                file.filename + ':GS' + str(i) + '.png',
+                'images/' + dir_name + '/GS' + str(i) + '.png',
+                'images/' + dir_name + '/RGB' + str(i) + '.png',
                 float(result[0]),
                 float(result[1]),
             ))
@@ -222,7 +224,7 @@ class DBSource(Source):
 class SavedSource(Source):
     def __init__(self, path: str):
         """
-        Load data from a previously saved source.
+        Load data from a previously bin source.
         Args:
             path: The path to pickle file
         """

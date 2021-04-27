@@ -28,7 +28,7 @@ class Program:
         # )
 
         self.source = FileSource('./zips')
-        self.source.dump('./data-' + time_name() + '.pkl')
+        self.source.dump('./bin/data-' + time_name() + '.pkl')
 
         config = load_json('vgg8.json')
 
@@ -108,14 +108,18 @@ class Program:
             self.writer.add_scalar('test_r2', r2score.compute(), epoch)
             self.writer.add_scalar('Test_Loss', val_loss, epoch)
 
-        torch.save(self.model, './model-' + time_name() + '.pl')
+        torch.save(self.model, './bin/model-' + time_name() + '.pt')
 
     def main(self):
         self.create_dataset()
         self.train_network(100)
 
 
-if __name__ == '__main__':
-    before()
+def run():
+    check_dir()
     app = Program()
     app.main()
+
+
+if __name__ == '__main__':
+    run()

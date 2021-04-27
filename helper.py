@@ -44,7 +44,7 @@ def dump_json(filename: str, data: Union[List, Dict]) -> None:
         json.dump(data, json_file)
 
 
-def before():
+def check_dir():
     import os
     import main
     work_dir = os.getcwd()

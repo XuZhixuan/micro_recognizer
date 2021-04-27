@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+import sys
+
+
+def run():
+    run_name = sys.argv[0]
+    command = sys.argv[1]
+    params = sys.argv[2:]
+
+    if command == 'clean':
+        clean(*params)
+    if command == 'debug':
+        debug()
+    if command == 'main':
+        main()
+
+
+def clean(*args):
+    import os
+    import shutil
+
+    dir_list = ['./images', './logs']
+    if args:
+        dir_list = []
+        if 'images' in args:
+            dir_list.append('./images')
+        if 'logs' in args:
+            dir_list.append('./logs')
+
+    for dir_name in dir_list:
+        content = os.listdir(dir_name)
+        for item in content:
+            if item[0] == '.':
+                continue
+
+            item = dir_name + '/' + item
+            if os.path.isdir(item):
+                shutil.rmtree(item)
+            else:
+                os.remove(item)
+
+
+def main(*args):
+    from main import run as main_exe
+    main_exe()
+
+
+def debug(*args):
+    from debug import debug as debug_exe
+    debug_exe()
+
+
+if __name__ == '__main__':
+    print('Welcome to micro recognizer project!')
+    run()

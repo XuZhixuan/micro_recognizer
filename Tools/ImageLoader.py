@@ -10,7 +10,8 @@ LoadList = List[Tuple[str, str, str, float, float]]
 
 
 loader = transforms.Compose([
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    # transforms.Normalize()
 ])
 
 
