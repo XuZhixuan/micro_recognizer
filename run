@@ -41,7 +41,7 @@ def clean(*args):
 
 
 def main(*args):
-    from main import run as main_exe
+    from handle import run as main_exe
     main_exe()
 
 

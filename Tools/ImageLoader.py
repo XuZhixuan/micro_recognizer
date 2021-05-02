@@ -5,28 +5,30 @@ from typing import Union, Tuple, List
 
 import Modules
 
-
 LoadList = List[Tuple[str, str, str, float, float]]
-
-
-loader = transforms.Compose([
-    transforms.ToTensor(),
-    # transforms.Normalize()
-])
 
 
 class ImageLoader:
     """ Image Loader Class
-    A static tools class
+        A tool class
     """
 
-    @staticmethod
+    def __init__(self):
+        self.loader = transforms.Compose([
+            transforms.ToTensor(),
+            # transforms.Normalize()
+        ])
+
+    def __call__(self, *args):
+        return self.loads(*args)
+
     def load(
-        origin: str,
-        path: Tuple[str, str],
-        percentage: float,
-        thermal: float,
-        box: tuple
+            self,
+            origin: str,
+            path: Tuple[str, str],
+            percentage: float,
+            thermal: float,
+            box: tuple
     ) -> Modules.Image:
         """ Load one image from given path
 
@@ -47,14 +49,13 @@ class ImageLoader:
         gray = Image.open(path[1])
         return Modules.Image(
             path=origin,
-            rgb=ImageLoader.pre_process(image, box, 0.5),
-            grayscale=ImageLoader.pre_process(gray, box, 0.5),
+            rgb=self.pre_process(image, box, 0.5),
+            grayscale=self.pre_process(gray, box, 0.5),
             percentage=float(percentage),
             thermal=float(thermal)
         )
 
-    @staticmethod
-    def loads(manifest: LoadList) -> list:
+    def loads(self, manifest: LoadList) -> list:
         """ Load images from a paths list
 
         Arg:
@@ -65,7 +66,7 @@ class ImageLoader:
         """
         images = []
         for material in manifest:
-            image = ImageLoader.load(
+            image = self.load(
                 origin=material[0],
                 path=(material[1], material[2]),
                 percentage=material[3],
@@ -76,8 +77,7 @@ class ImageLoader:
 
         return images
 
-    @staticmethod
-    def pre_process(image: Image, box: tuple, size: Union[tuple, float] = .5) -> Image:
+    def pre_process(self, image: Image, box: tuple, size: Union[tuple, float] = .5) -> Image:
         """ Process an image loaded
 
         Args:
@@ -106,7 +106,7 @@ class ImageLoader:
             elif isinstance(size, float):
                 new_img = new_img.resize((int(shape[0] * size), int(shape[1] * size)), Image.ANTIALIAS)
 
-        return loader(new_img).unsqueeze(0).to('cuda')
+        return self.loader(new_img).unsqueeze(0).to('cuda')
 
 
 class SizeTooSmallException(Exception):

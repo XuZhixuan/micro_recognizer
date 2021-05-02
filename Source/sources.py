@@ -13,6 +13,7 @@ class Source:
     def __init__(self):
         self.data = []
         self.length = 0
+        self.loader = ImageLoader()
 
     @abstractmethod
     def fetch(self):
@@ -65,8 +66,7 @@ class FileSource(Source):
 
         self.data = data
 
-    @staticmethod
-    def load(file: zipfile.ZipFile) -> list:
+    def load(self, file: zipfile.ZipFile) -> list:
         nums = []
         # Determine the first file in zip file
         for name in file.namelist():
@@ -97,7 +97,7 @@ class FileSource(Source):
                 float(result[1]),
             ))
 
-        return ImageLoader.loads(manifest)
+        return self.loader(manifest)
 
 
 class DBSource(Source):
@@ -155,7 +155,7 @@ class DBSource(Source):
                 self.downloading = False
                 break
 
-        self.data = ImageLoader.loads(self.manifest)
+        self.data = self.loader(self.manifest)
         self.length = len(self.data)
 
     def fetch(self) -> None:
@@ -254,7 +254,6 @@ class TestSource(Source):
     def fetch(self) -> List[Tuple]:
         import struct
         from PIL import Image
-        from Tools.ImageLoader import loader
 
         data = []
 
@@ -285,7 +284,7 @@ class TestSource(Source):
                     )
 
                     data.append((
-                        loader(image).unsqueeze(0).cuda(),
+                        self.loader.loader(image).unsqueeze(0).cuda(),
                         label
                     ))
 

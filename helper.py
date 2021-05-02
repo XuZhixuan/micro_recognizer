@@ -46,9 +46,9 @@ def dump_json(filename: str, data: Union[List, Dict]) -> None:
 
 def check_dir():
     import os
-    import main
+    import app
     work_dir = os.getcwd()
-    file_dir = os.path.dirname(main.__file__)
+    file_dir = os.path.dirname(app.__file__)
     print('[  INFO  ] Current working dir: ', work_dir)
     if work_dir != file_dir:
         print('[  WARN  ] Not running in program dir, changing...')
