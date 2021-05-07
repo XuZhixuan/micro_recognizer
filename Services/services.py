@@ -1,6 +1,6 @@
-from container import Container
-
 from abc import abstractmethod
+
+from container import Container
 
 
 class ServiceProvider:
@@ -8,6 +8,7 @@ class ServiceProvider:
     Base abstract Service Provider class
     The Service provider class is used to register a service to the app container
     """
+
     def __init__(self, app: Container):
         self.app = app
 
@@ -40,9 +41,21 @@ class LayerMakeServiceProvider(ServiceProvider):
 class SummaryServiceProvider(ServiceProvider):
     def register(self):
         from torch.utils.tensorboard import SummaryWriter
-        self.app.singleton('summary', SummaryWriter(
+        self.app.singleton('train_summary', SummaryWriter(
             self.app.config('logs.summary.dir')
         ))
+
+        from torchsummary import summary
+        self.app.singleton('network_summary', summary)
+
+    def boot(self):
+        pass
+
+
+class ImageLoaderServiceProvider(ServiceProvider):
+    def register(self):
+        from Tools import ImageLoader
+        self.app.singleton(ImageLoader, ImageLoader())
 
     def boot(self):
         pass
@@ -50,30 +63,26 @@ class SummaryServiceProvider(ServiceProvider):
 
 class DataServicesProvider(ServiceProvider):
     def register(self):
-        from Source import Source
+        pass
 
+    def boot(self):
+        from Source import Source
         self.app.singleton(
             Source,
             self.app.config('data.source')(
-                **self.app.config('data.kwargs')
+                **dict({'app': self.app}, **self.app.config('data.kwargs'))
             )
         )
 
         self.app.set_alias(Source, 'source')
 
-    def boot(self):
-        pass
-
 
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
         from Modules import Network
-        from helper import load_json
         self.app.singleton(Network, Network(
             self.app,
-            load_json(
-                self.app.config('training.define')
-            )
+            self.app.config('training.define'),
         ))
         self.app.set_alias(Network, 'model')
 
@@ -99,3 +108,13 @@ class TrainingServiceProvider(ServiceProvider):
 
         self.app.singleton('loss_function', loss)
         self.app.singleton('optimizer', optimizer)
+
+
+class RedirectPrintServiceProvider(ServiceProvider):
+    def register(self):
+        from Tools import UnbufferedLogger
+        self.app.singleton('redirect_print', UnbufferedLogger(self.app))
+
+    def boot(self):
+        import sys
+        sys.stdout = self.app.redirect_print

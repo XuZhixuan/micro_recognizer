@@ -47,9 +47,11 @@ class Application(Container):
             self.boot(service(self))
 
     _providers = [
-        DataServicesProvider,
+        ImageLoaderServiceProvider,
+        # DataServicesProvider,
         NetworkServiceProvider,
-        TrainingServiceProvider
+        TrainingServiceProvider,
+        RedirectPrintServiceProvider
     ]
 
     @staticmethod
@@ -75,10 +77,10 @@ class Application(Container):
 
 
 def run():
+    check_dir()
     app = Application()
     app.handle()
 
 
-check_dir()
 if __name__ == '__main__':
     run()

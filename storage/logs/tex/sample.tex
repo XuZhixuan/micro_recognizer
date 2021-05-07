@@ -1,0 +1,46 @@
+\documentclass{ctexrep}
+
+\usepackage{fontspec}
+\setmainfont{Ubuntu Mono}
+
+\setlength{\headheight}{13pt}
+\usepackage{ragged2e}
+
+% 设置页面比例
+\usepackage{geometry}
+\geometry{a4paper,scale=0.85}
+
+% 设置页眉
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{模型训练报告}
+\rhead{\today}
+
+\title{Model training summary}
+\author{Xu Zhixuan}
+\date{\today}
+
+\begin{document}
+% \maketitle
+\section*{\heiti 模型定义}
+%{model_define}
+\section*{\heiti 训练参数}
+\begin{table}[h]
+    \begin{tabular}{ll}
+        Learning Rate & 0.001             \\
+        Loss Function & MSE Loss Function \\
+        Optimizer     & SGD Optimizer     \\
+        %{train_params}
+    \end{tabular}
+\end{table}
+\section*{\heiti 数据集}
+\begin{table}[h]
+    \begin{tabular}{ll}
+        Source             & ZipFiles                       \\
+        Location           & @/bin/data-20210424T153214.pkl \\
+        Scale              & 6000                           \\
+        Validate Set Ratio & 0.1                            \\
+    \end{tabular}
+\end{table}
+\section*{\heiti 训练结果}
+\end{document}

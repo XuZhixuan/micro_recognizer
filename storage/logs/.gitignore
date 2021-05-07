@@ -1,3 +1,5 @@
 *
 !tensorboard/
+!print/
+!tex/
 !.gitignore

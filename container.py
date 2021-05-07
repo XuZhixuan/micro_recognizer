@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 from warnings import warn
 
 
@@ -19,7 +19,7 @@ class Container:
         """
         self._bindings[abstract] = concrete
 
-    def resolve(self, abstract: Union[type, str]) -> object:
+    def resolve(self, abstract: Union[type, str]) -> Any:
         """
         Resolve the instance bind to class
         Args:

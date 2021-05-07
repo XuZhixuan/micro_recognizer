@@ -5,15 +5,16 @@ import os
 
 from typing import List, Tuple
 from abc import abstractmethod
-
+from container import Container
 from Tools import ImageLoader
 
 
 class Source:
-    def __init__(self):
+    def __init__(self, app: Container):
         self.data = []
         self.length = 0
-        self.loader = ImageLoader()
+        self.app = app
+        self.loader = app.resolve(ImageLoader)
 
     @abstractmethod
     def fetch(self):
@@ -44,8 +45,8 @@ class Source:
 
 
 class FileSource(Source):
-    def __init__(self, dir_name: str):
-        super().__init__()
+    def __init__(self, app: Container, dir_name: str):
+        super().__init__(app)
         self.dir_name = dir_name
         self.fetch()
         self.length = len(self.data)
@@ -103,6 +104,7 @@ class FileSource(Source):
 class DBSource(Source):
     def __init__(
             self,
+            app: Container,
             db_hostname: str,
             db_username: str,
             db_password: str,
@@ -118,7 +120,7 @@ class DBSource(Source):
             db_name: The name of database to use
             base_url: The base url prefix append before images path
         """
-        super(DBSource, self).__init__()
+        super(DBSource, self).__init__(app)
 
         import pymysql
         import threading
@@ -222,13 +224,13 @@ class DBSource(Source):
 
 
 class SavedSource(Source):
-    def __init__(self, path: str):
+    def __init__(self, app: Container, path: str):
         """
         Load data from a previously bin source.
         Args:
             path: The path to pickle file
         """
-        super(SavedSource, self).__init__()
+        super(SavedSource, self).__init__(app)
 
         self.path = path
         self.data = []
@@ -246,8 +248,8 @@ class TestSource(Source):
         ('tests/t10k-images-idx3-ubyte', 'tests/t10k-labels-idx1-ubyte')
     ]
 
-    def __init__(self):
-        super(TestSource, self).__init__()
+    def __init__(self, app: Container):
+        super(TestSource, self).__init__(app)
         self.data = self.fetch()
         pass
 

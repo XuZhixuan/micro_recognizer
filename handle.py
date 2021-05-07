@@ -54,7 +54,8 @@ class Handler:
             x, y = datum
             pred.append(self.app.model(x))
 
-        fig = plot.plot(y_data, pred)
+        plot.plot(y_data, pred)
+        plot.savefig('./storage/print/' + time_name() + '.png')
         pass
 
     def train_network(self, epochs):
@@ -75,7 +76,7 @@ class Handler:
 
             train_loss /= len(self.train_set[0])
             # Log the train loss for tensorboard
-            self.app.writer.add_scalar('Train_Loss', train_loss, epoch)
+            self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
             print('Train finished, loss=%f' % train_loss, end=' ')
 
             # Start validating
@@ -94,11 +95,12 @@ class Handler:
             print('Test finished, loss=%f, r2=%f' % (val_loss, r2score.compute()))
 
             # Log the validate loss & r2 for tensorboard
-            self.app.writer.add_scalar('test_r2', r2score.compute(), epoch)
-            self.app.writer.add_scalar('Test_Loss', val_loss, epoch)
+            self.app.train_summary.add_scalar('test_r2', r2score.compute(), epoch)
+            self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
 
         save(self.app.model, './bin/model-' + time_name() + '.pt')
 
     def run(self):
-        self.create_dataset()
+        self.app.network_summary(self.app.model, (1, 487, 487))
+        # self.create_dataset()
         self.train_network(100)
