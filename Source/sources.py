@@ -45,13 +45,11 @@ class Source(ABC):
         if isinstance(item, slice):
             if isinstance(self, SavedSource):
                 chunks = len(self._chunks)
-                if item.start is None:
-                    item.start = 0 
-                if item.stop is None:
-                    item.stop = 0 
-                start = int(item.start / self.length * chunks)
-                stop = int((item.stop - item.start) / self.length * chunks) + start
-                new_chunks = self._chunks[start:stop]
+                start = 0 if item.start is None: else item.start
+                stop = 0 if item.stop is None else item.stop
+                _start = int(start / self.length * chunks)
+                _stop = int((stop - start) / self.length * chunks) + start
+                new_chunks = self._chunks[_start:_stop]
                 source = SavedSource(self.app, self.path)
                 source._chunks = new_chunks
                 source.length = sum(map(lambda x: x[1], new_chunks))
