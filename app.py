@@ -80,7 +80,6 @@ class Application(Container):
 def run():
     check_dir()
     app = Application()
-    a = app.source[0:100]
     app.handle()
 
 

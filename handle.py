@@ -9,9 +9,14 @@ from helper import *
 
 class Handler:
     def __init__(self, app: Container):
-        # self.train_set = DataLoader()
+        self.train_set = None
         self.validate_set = None
         self.app = app
+
+    def create_dataset(self):
+        train_set, validate_set = train_test_split(self.app.source, 0.1)
+        self.train_set = DataLoader(train_set)
+        self.validate_set = DataLoader(validate_set)
 
     def summary(self):
         self.app.model.eval()
@@ -69,4 +74,5 @@ class Handler:
 
     def run(self):
         self.app.network_summary(self.app.model, (1, 487, 487))
+        self.create_dataset()
         self.train_network(self.app.config('training.epochs'))
