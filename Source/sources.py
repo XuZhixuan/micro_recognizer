@@ -137,7 +137,7 @@ class FileSource(Source):
         dir_name = file.namelist()[0].split('/')[0]
 
         # Transform the result file into a load list
-        with open('images/' + dir_name + '/result.txt', 'r') as results_file:
+        with open('./storage/images/' + dir_name + '/result.txt', 'r') as results_file:
             results = results_file.readlines()
 
         manifest = []
@@ -145,8 +145,8 @@ class FileSource(Source):
             result = result.split()
             manifest.append((
                 file.filename + ':GS' + str(i) + '.png',
-                'images/' + dir_name + '/GS' + str(i) + '.png',
-                'images/' + dir_name + '/RGB' + str(i) + '.png',
+                './storage/images/' + dir_name + '/GS' + str(i) + '.png',
+                './storage/images/' + dir_name + '/RGB' + str(i) + '.png',
                 float(result[0]),
                 float(result[1]),
             ))

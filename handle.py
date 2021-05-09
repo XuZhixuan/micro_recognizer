@@ -28,7 +28,6 @@ class Handler:
 
         plot.plot(y_data, pred)
         plot.savefig('./storage/print/' + time_name() + '.png')
-        pass
 
     def train_network(self, epochs):
         for epoch in range(epochs):
@@ -46,7 +45,7 @@ class Handler:
                 loss.backward()
                 self.app.optimizer.step()
 
-            train_loss /= len(self.train_set[0])
+            train_loss /= len(self.train_set)
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
             print('Train finished, loss=%f' % train_loss, end=' ')
@@ -63,7 +62,7 @@ class Handler:
                 val_loss += loss.data.item()
                 r2score.update((out, y))
 
-            val_loss /= len(self.validate_set[0])
+            val_loss /= len(self.validate_set)
             print('Test finished, loss=%f, r2=%f' % (val_loss, r2score.compute()))
 
             # Log the validate loss & r2 for tensorboard
@@ -76,3 +75,4 @@ class Handler:
         self.app.network_summary(self.app.model, (1, 487, 487))
         self.create_dataset()
         self.train_network(self.app.config('training.epochs'))
+        self.summary()
