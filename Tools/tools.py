@@ -109,7 +109,7 @@ class ImageLoader:
             elif isinstance(self.size, float):
                 new_img = new_img.resize((int(shape[0] * self.size), int(shape[1] * self.size)), Image.ANTIALIAS)
 
-        return self.loader(new_img).unsqueeze(0).to('cuda')
+        return self.loader(new_img).to('cuda')
 
 
 class SizeTooSmallException(Exception):
