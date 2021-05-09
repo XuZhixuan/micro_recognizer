@@ -1,7 +1,10 @@
 from typing import Union, Tuple, List
 
+import numpy
+
 from PIL import Image
 from torch import nn
+from torch import from_numpy
 from torch import optim
 from torchvision import transforms
 
@@ -60,8 +63,8 @@ class ImageLoader:
             thermal=from_numpy(
                 # Normalize the thermal conductivity
                 numpy.array(
-                    (image.thermal - self.app.config('data.bound.low')) / self.app.config('data.bound.inter'))
-            ).view(1, 1).float().cuda()
+                    (float(thermal) - self.app.config('data.bound.low')) / self.app.config('data.bound.inter'))
+            ).view(1).float().cuda()
         )
 
     def loads(self, manifest: LoadList) -> list:

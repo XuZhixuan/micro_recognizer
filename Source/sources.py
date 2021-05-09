@@ -65,7 +65,7 @@ class Source(ABC):
 
         image = self.data[item % self._chunk_size]
 
-        return image.grayscale, tag.thermal
+        return image.grayscale, image.thermal
 
     def __len__(self):
         return self.length
