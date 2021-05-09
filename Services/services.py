@@ -64,7 +64,7 @@ class SummaryServiceProvider(ServiceProvider):
 class ImageLoaderServiceProvider(ServiceProvider):
     def register(self):
         from Tools import ImageLoader
-        self.app.singleton(ImageLoader, ImageLoader())
+        self.app.singleton(ImageLoader, ImageLoader(self.app))
 
     def boot(self):
         pass

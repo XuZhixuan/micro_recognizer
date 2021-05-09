@@ -8,10 +8,6 @@ from typing import List, Tuple
 from Tools import ImageLoader
 from container import Container
 
-THERMAL_LOW_BOUND = 16.0
-THERMAL_INTER = 12.0
-
-
 class Source(ABC):
     _chunk = -1
     _chunks = []
@@ -24,11 +20,6 @@ class Source(ABC):
         self.length = 0
         self.app = app
         self.loader = app.resolve(ImageLoader)
-
-        global THERMAL_INTER
-        global THERMAL_LOW_BOUND
-        THERMAL_LOW_BOUND = app.config('data.bound.low')
-        THERMAL_INTER = app.config('data.bound.inter')
 
     def __iter__(self):
         self._current = 0
@@ -74,11 +65,7 @@ class Source(ABC):
 
         image = self.data[item % self._chunk_size]
 
-        tag = from_numpy(
-            numpy.array((image.thermal - THERMAL_LOW_BOUND) / THERMAL_INTER)  # Normalize the thermal conductivity
-        ).view(1, 1).float().cuda()
-
-        return image.grayscale, tag
+        return image.grayscale, tag.thermal
 
     def __len__(self):
         return self.length

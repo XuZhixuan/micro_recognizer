@@ -16,8 +16,9 @@ class ImageLoader:
         A tool class
     """
 
-    def __init__(self, size: Union[float, Tuple] = .5):
+    def __init__(self, app: Container, size: Union[float, Tuple] = .5):
         self.size = size
+        self.app = app
         self.loader = transforms.Compose([
             transforms.ToTensor(),
             # transforms.Normalize()
@@ -56,7 +57,11 @@ class ImageLoader:
             rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
             grayscale=self.pre_process(gray, box),
             percentage=float(percentage),
-            thermal=float(thermal)
+            thermal=from_numpy(
+                # Normalize the thermal conductivity
+                numpy.array(
+                    (image.thermal - self.app.config('data.bound.low')) / self.app.config('data.bound.inter'))
+            ).view(1, 1).float().cuda()
         )
 
     def loads(self, manifest: LoadList) -> list:
@@ -107,7 +112,8 @@ class ImageLoader:
             if isinstance(self.size, tuple):
                 new_img = new_img.resize(self.size, Image.ANTIALIAS)
             elif isinstance(self.size, float):
-                new_img = new_img.resize((int(shape[0] * self.size), int(shape[1] * self.size)), Image.ANTIALIAS)
+                new_img = new_img.resize(
+                    (int(shape[0] * self.size), int(shape[1] * self.size)), Image.ANTIALIAS)
 
         return self.loader(new_img).to('cuda')
 
@@ -181,7 +187,8 @@ class UnbufferedLogger:
     def __init__(self, app: Container):
         from helper import time_name
         self.app = app
-        self.log_file = open(self.app.config('logs.print.dir') + time_name() + '.txt', 'w')
+        self.log_file = open(self.app.config(
+            'logs.print.dir') + time_name() + '.txt', 'w')
 
     def log(self, content: str, level: str):
         self.write('[ %s ] %s' % (level, content))
