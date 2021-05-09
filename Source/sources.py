@@ -1,55 +1,112 @@
-import pickle
-import zipfile
-import re
 import os
-
+import pickle
+import re
+import zipfile
+from abc import ABC
 from typing import List, Tuple
-from abc import abstractmethod
-from container import Container
+
 from Tools import ImageLoader
+from container import Container
+
+THERMAL_LOW_BOUND = 16.0
+THERMAL_INTER = 12.0
 
 
-class Source:
-    def __init__(self, app: Container):
+class Source(ABC):
+    _chunk = -1
+    _chunks = []
+    _dumping = True
+    _chunk_size = 1000
+
+    def __init__(self, app: Container, chunk_size: int = 1000):
+        self._chunk_size = chunk_size
         self.data = []
         self.length = 0
         self.app = app
         self.loader = app.resolve(ImageLoader)
 
-    @abstractmethod
-    def fetch(self):
-        raise NotImplementedError
+        global THERMAL_INTER
+        global THERMAL_LOW_BOUND
+        THERMAL_LOW_BOUND = app.config('data.bound.low')
+        THERMAL_INTER = app.config('data.bound.inter')
 
     def __iter__(self):
-        self.curr = 0
+        self._current = 0
         return self
-
-    def __getitem__(self, item):
-        return self.data[item]
 
     def __next__(self):
-        if self.curr >= self.length:
+        index = self._current
+        self._current += 1
+        if index >= self.length:
             raise StopIteration
-        else:
-            index = self.curr
-            self.curr += 1
-            return self.data[index]
+        return self[index]
 
-    def __add__(self, other):
-        self.data += other
-        return self
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            if isinstance(self, SavedSource):
+                chunks = len(self._chunks)
+                start = item.start / self.length * chunks
+                stop = (item.stop - item.start) / self.length * chunks + start
+                new_chunks = self._chunks[start:stop]
+                source = SavedSource(self.app, self.path)
+                source._chunks = new_chunks
+                source.length = sum(map(lambda x: x[1], new_chunks))
+                return source
+            full_list = []
+            for chunk in self._chunks:
+                full_list.extend(chunk)
+            new_list = full_list[item.start:item.stop]
+            source = Source(self.app)
+            source._chunks = list(self.app.helper.list_chunk(new_list, self._chunk_size))
+            source.length = len(new_list)
+            return source
+
+        import numpy
+        from torch import from_numpy
+        if self._chunk == -1 or self._chunk != int(item / self._chunk_size):
+            self._chunk = int(item / self._chunk_size)
+            self.data = self.loader(
+                self._chunks[self._chunk]
+            )
+
+        image = self.data[item % self._chunk_size]
+
+        tag = from_numpy(
+            numpy.array((image.thermal - THERMAL_LOW_BOUND) / THERMAL_INTER)  # Normalize the thermal conductivity
+        ).view(1, 1).float().cuda()
+
+        return image.grayscale, tag
+
+    def __len__(self):
+        return self.length
 
     def dump(self, path: str):
         with open(path, 'wb') as bin_file:
             pickle.dump(self.data, bin_file)
 
+    def load(self, path: str):
+        with open(path, 'rb') as bin_file:
+            self.data = pickle.load(bin_file)
+
+    def chunks_dump(self):
+        name = self.app.helper.time_name()
+        os.mkdir(self.app.config('data.cache') + name)
+
+        meta = []
+        for i, datum in enumerate(self._chunks):
+            self.data = self.loader(datum)
+            self.dump(self.app.config('data.cache') + name + '/' + str(i) + '.pkl')
+            meta.append((str(i) + '.pkl', len(self.data)))
+
+        self.app.helper.dump_json(self.app.config('data.cache') + name + '/meta.json', meta)
+
 
 class FileSource(Source):
-    def __init__(self, app: Container, dir_name: str):
+    def __init__(self, app: Container, dir_name: str, dump: bool = True):
         super().__init__(app)
         self.dir_name = dir_name
+        self._dumping = dump
         self.fetch()
-        self.length = len(self.data)
 
     def fetch(self):
         # Detect the zip files presented in given dir
@@ -60,14 +117,20 @@ class FileSource(Source):
                     zipfile.ZipFile(self.dir_name + '/' + file)
                 )
 
-        data = []
+        manifest = []
         # Load data from each zip file
         for zip_file in zip_files:
-            data += self.load(zip_file)
+            manifest += self.load_list(zip_file)
+            self.length += len(manifest)
 
-        self.data = data
+        # 加载列表分块
+        self._chunks = list(self.app.helper.list_chunk(manifest, self._chunk_size))
 
-    def load(self, file: zipfile.ZipFile) -> list:
+        if self._dumping:
+            self.chunks_dump()
+
+    @staticmethod
+    def load_list(file: zipfile.ZipFile) -> list:
         nums = []
         # Determine the first file in zip file
         for name in file.namelist():
@@ -98,10 +161,14 @@ class FileSource(Source):
                 float(result[1]),
             ))
 
-        return self.loader(manifest)
+        return manifest
 
 
 class DBSource(Source):
+    _chunk = -1
+    _chunks = []
+    _dumping = True
+
     def __init__(
             self,
             app: Container,
@@ -109,7 +176,8 @@ class DBSource(Source):
             db_username: str,
             db_password: str,
             db_name: str,
-            base_url: str
+            base_url: str,
+            dump: bool = True
     ):
         """
         Database Source Implementation
@@ -125,6 +193,7 @@ class DBSource(Source):
         import pymysql
         import threading
 
+        self._dumping = dump
         self.base_url = base_url
         self.download_tasks = []
         self.manifest = []
@@ -157,8 +226,8 @@ class DBSource(Source):
                 self.downloading = False
                 break
 
-        self.data = self.loader(self.manifest)
-        self.length = len(self.data)
+        self._chunks = list(self.app.helper.list_chunk(self.manifest, self._chunk_size))
+        self.length = len(self.manifest)
 
     def fetch(self) -> None:
         # Two cursors to perform different queries
@@ -200,7 +269,11 @@ class DBSource(Source):
             # Push the material params list into the materials list
             materials.append(material)
 
-        self.manifest = materials
+        self._chunks = list(self.app.helper.list_chunk(materials, self._chunk_size))
+        self.length = len(materials)
+
+        if self._dumping:
+            self.chunks_dump()
 
     def download(self):
         import requests
@@ -224,22 +297,26 @@ class DBSource(Source):
 
 
 class SavedSource(Source):
-    def __init__(self, app: Container, path: str):
+    def __init__(self, app: Container, dir_name: str):
         """
         Load data from a previously bin source.
         Args:
-            path: The path to pickle file
+            dir_name: The path to saves file
         """
         super(SavedSource, self).__init__(app)
-
-        self.path = path
-        self.data = []
+        self.path = dir_name
         self.fetch()
-        self.length = len(self.data)
+        self.loader = self.load_chunk
 
     def fetch(self):
-        with open(self.path, 'rb') as bin_file:
-            self.data = pickle.load(bin_file)
+        meta = self.app.helper.load_json(self.path + '/meta.json')
+        for chunk_desc in meta:
+            self._chunks.append(tuple(chunk_desc))
+            self.length += chunk_desc[1]
+
+    def load_chunk(self, chunk_desc):
+        with open(self.path + '/' + chunk_desc[0], 'rb') as bin_file:
+            return pickle.load(bin_file)
 
 
 class TestSource(Source):

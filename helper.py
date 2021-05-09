@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Generator
 
 
 def train_test_split(data, validate_size=0.3, random=False):
@@ -59,3 +59,8 @@ def check_dir():
 def time_name():
     import datetime
     return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+
+
+def list_chunk(_list: list, size: int) -> Generator:
+    for i in range(0, len(_list), size):
+        yield _list[i:i + size]

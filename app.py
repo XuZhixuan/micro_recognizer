@@ -33,6 +33,7 @@ class Application(Container):
         """
         Set the auxiliary services for training
         """
+        self.register(HelperFunctionsServiceProvider(self))
         self.register(LayerMakeServiceProvider(self))
         self.register(SummaryServiceProvider(self))
 
@@ -48,7 +49,7 @@ class Application(Container):
 
     _providers = [
         ImageLoaderServiceProvider,
-        # DataServicesProvider,
+        DataServicesProvider,
         NetworkServiceProvider,
         TrainingServiceProvider,
         RedirectPrintServiceProvider
@@ -79,6 +80,7 @@ class Application(Container):
 def run():
     check_dir()
     app = Application()
+    a = app.source[0:100]
     app.handle()
 
 

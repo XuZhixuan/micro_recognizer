@@ -29,6 +29,15 @@ class ServiceProvider:
         raise NotImplementedError
 
 
+class HelperFunctionsServiceProvider(ServiceProvider):
+    def register(self):
+        import helper
+        self.app.singleton('helper', helper)
+
+    def boot(self):
+        pass
+
+
 class LayerMakeServiceProvider(ServiceProvider):
     def register(self):
         from Tools import ClsInitializer

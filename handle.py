@@ -1,50 +1,17 @@
-import numpy
-from torch import from_numpy, cat, save
-import matplotlib.pyplot as plot
-
 import ignite.contrib.metrics.regression as reg
+import matplotlib.pyplot as plot
+from torch import save
+from torch.utils.data.dataloader import DataLoader
 
-from helper import *
 from container import Container
+from helper import *
 
 
 class Handler:
     def __init__(self, app: Container):
-        self.train_set = None
+        # self.train_set = DataLoader()
         self.validate_set = None
         self.app = app
-
-    def create_dataset(self, batch_size: int = 1):
-        """
-        Create the dataset for training & validation
-        Convert from Image instance to dataset
-        """
-        # Calculate the min thermal conductivity in the set
-        low = 16.0  # min(self.source, key=lambda x: x.thermal).thermal
-        inter = 28.0  # max(self.source, key=lambda x: x.thermal).thermal - low
-
-        data = []
-        for image in self.app.source:
-            data.append(
-                (
-                    image.grayscale,
-                    from_numpy(
-                        numpy.array((image.thermal - low) / inter)  # Normalize the thermal conductivity
-                    ).view(1, 1).float().cuda()
-                )
-            )
-
-        if batch_size > 1:
-            temp = []
-            for i in range(0, len(data), batch_size):
-                x_tensor = cat(list(map(lambda x: x[0], data[i:i + batch_size])))
-                y_tensor = cat(list(map(lambda x: x[1], data[i:i + batch_size])))
-                temp.append(
-                    (x_tensor, y_tensor)
-                )
-            data = temp
-
-        self.train_set, self.validate_set = train_test_split(data, validate_size=0.2)
 
     def summary(self):
         self.app.model.eval()
@@ -102,5 +69,4 @@ class Handler:
 
     def run(self):
         self.app.network_summary(self.app.model, (1, 487, 487))
-        # self.create_dataset()
-        self.train_network(100)
+        self.train_network(self.app.config('training.epochs'))

@@ -53,7 +53,7 @@ class ImageLoader:
         gray = Image.open(path[1])
         return Modules.Image(
             path=origin,
-            rgb=self.pre_process(image, box),
+            rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
             grayscale=self.pre_process(gray, box),
             percentage=float(percentage),
             thermal=float(thermal)
