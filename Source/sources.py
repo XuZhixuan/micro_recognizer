@@ -45,6 +45,8 @@ class Source(ABC):
         if isinstance(item, slice):
             if isinstance(self, SavedSource):
                 chunks = len(self._chunks)
+                item.start = 0 if item.start is None
+                item.stop = 0 if item.stop is None
                 start = int(item.start / self.length * chunks)
                 stop = int((item.stop - item.start) / self.length * chunks) + start
                 new_chunks = self._chunks[start:stop]
@@ -52,6 +54,7 @@ class Source(ABC):
                 source._chunks = new_chunks
                 source.length = sum(map(lambda x: x[1], new_chunks))
                 return source
+
             full_list = []
             for chunk in self._chunks:
                 full_list.extend(chunk)
@@ -135,7 +138,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            file.extract(name, path='images')
+            file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(
