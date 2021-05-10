@@ -1,10 +1,9 @@
 from typing import Union, Tuple, List
 
 import numpy
-
 from PIL import Image
-from torch import nn
 from torch import from_numpy
+from torch import nn
 from torch import optim
 from torchvision import transforms
 
@@ -53,7 +52,7 @@ class ImageLoader:
         Return:
             image: An image instance
         """
-        image = Image.open(path[0])
+        # image = Image.open(path[0])
         gray = Image.open(path[1])
         return Modules.Image(
             path=origin,

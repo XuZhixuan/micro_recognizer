@@ -19,12 +19,14 @@ class Handler:
         self.validate_set = DataLoader(validate_set)
 
     def summary(self):
+        save(self.app.model, './storage/bin/model-' + time_name() + '.pt')
         self.app.model.eval()
-        y_data = map(lambda k: k[1], self.validate_set)
+        y_data = []
         pred = []
         for i, datum in enumerate(self.validate_set):
             x, y = datum
             pred.append(self.app.model(x))
+            y_data.append(y)
 
         plot.plot(y_data, pred)
         plot.savefig('./storage/print/' + time_name() + '.png')
@@ -68,8 +70,6 @@ class Handler:
             # Log the validate loss & r2 for tensorboard
             self.app.train_summary.add_scalar('test_r2', r2score.compute(), epoch)
             self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
-
-        save(self.app.model, './bin/model-' + time_name() + '.pt')
 
     def run(self):
         self.app.network_summary(self.app.model, (1, 487, 487))

@@ -8,6 +8,7 @@ from typing import List, Tuple
 from Tools import ImageLoader
 from container import Container
 
+
 class Source(ABC):
     _chunk = -1
     _chunks = []
@@ -55,8 +56,6 @@ class Source(ABC):
             source.length = len(new_list)
             return source
 
-        import numpy
-        from torch import from_numpy
         if self._chunk == -1 or self._chunk != int(item / self._chunk_size):
             self._chunk = int(item / self._chunk_size)
             self.data = self.loader(
