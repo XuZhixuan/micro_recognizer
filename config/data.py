@@ -5,9 +5,9 @@ config = {
         'low': 16.0,
         'inter': 12.0
     },
-    'source': SavedSource,
+    'source': FileSource,
     'kwargs': {
-        'dir_name': './storage/saves/0/'
+        'dir_name': './storage/zips/'
     },
     'cache': './storage/cache/'
     # 'source': DBSource,

@@ -50,7 +50,7 @@ class Handler:
             train_loss /= len(self.train_set)
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
-            print('Train finished, loss=%f' % train_loss, end=' ')
+            print('Train finished, loss=%f' % train_loss, end='')
 
             # Start validating
             self.app.model.eval()

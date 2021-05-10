@@ -92,7 +92,7 @@ class Source(ABC):
 
 class FileSource(Source):
     def __init__(self, app: Container, dir_name: str, dump: bool = True):
-        super().__init__(app)
+        super(FileSource, self).__init__(app)
         self.dir_name = dir_name
         self._dumping = dump
         self.fetch()
@@ -110,7 +110,8 @@ class FileSource(Source):
         # Load data from each zip file
         for zip_file in zip_files:
             manifest += self.load_list(zip_file)
-            self.length += len(manifest)
+
+        self.length = len(manifest)
 
         # 加载列表分块
         self._chunks = list(self.app.helper.list_chunk(manifest, self._chunk_size))
