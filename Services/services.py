@@ -88,11 +88,14 @@ class DataServicesProvider(ServiceProvider):
 
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
+        from torch.nn import DataParallel
         from Modules import Network
-        self.app.singleton(Network, Network(
+        model = Network(
             self.app,
             self.app.config('training.define'),
-        ))
+        )
+        model = DataParallel(model, device_ids=[0, 1, 2, 3])
+        self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
 
     def boot(self):
