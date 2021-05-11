@@ -1,4 +1,3 @@
-
 def config(name: str):
     import sys
     sys.path.append('config')

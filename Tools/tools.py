@@ -1,7 +1,7 @@
 from typing import Union, Tuple, List
 
-import numpy
 from PIL import Image
+from torch import Tensor
 from torch import from_numpy
 from torch import nn
 from torch import optim
@@ -59,12 +59,24 @@ class ImageLoader:
             rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
             grayscale=self.pre_process(gray, box),
             percentage=float(percentage),
-            thermal=from_numpy(
-                # Normalize the thermal conductivity
-                numpy.array(
-                    (float(thermal) - self.app.config('data.bound.low')) / self.app.config('data.bound.inter'))
-            ).view(1).float().cuda()
+            thermal=self.classify(
+                float(thermal),
+                500
+            )
         )
+
+    def classify(self, y: float, length: int) -> Tensor:
+        import numpy as np
+        low = self.app.config('data.bound.low')
+        inter = self.app.config('data.bound.inter')
+        if y <= low:
+            cls = 0
+        elif y >= low + inter:
+            cls = length + 1
+        else:
+            cls = int((y - low) / inter * length)
+
+        return from_numpy(np.array(cls)).long().unsqueeze(0).cuda()
 
     def loads(self, manifest: LoadList) -> list:
         """ Load images from a paths list

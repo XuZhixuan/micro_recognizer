@@ -56,11 +56,17 @@ def check_dir():
         print('[   OK   ] Now running in: ', os.getcwd())
 
 
-def time_name():
+def time_name(real: bool = False):
     import datetime
-    return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+    if real:
+        return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+    else:
+        return start_time
 
 
 def list_chunk(_list: list, size: int) -> Generator:
     for i in range(0, len(_list), size):
         yield _list[i:i + size]
+
+
+start_time = time_name(True)

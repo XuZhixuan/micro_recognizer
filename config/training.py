@@ -56,7 +56,7 @@ config = {
             "class": "Conv2d",
             "args": {
                 "in_channels": 128,
-                "out_channels": 128,
+                "out_channels": 256,
                 "kernel_size": 3
             }
         },
@@ -69,14 +69,14 @@ config = {
         {
             "class": "BatchNorm2d",
             "args": {
-                "num_features": 128
+                "num_features": 256
             }
         },
         {
             "class": "Conv2d",
             "args": {
-                "in_channels": 128,
-                "out_channels": 256,
+                "in_channels": 256,
+                "out_channels": 512,
                 "kernel_size": 3
             }
         },
@@ -105,8 +105,8 @@ config = {
         {
             "class": "Linear",
             "args": {
-                "in_features": 102400,
-                "out_features": 512
+                "in_features": 204800,
+                "out_features": 1024
             }
         },
         {
@@ -118,8 +118,8 @@ config = {
         {
             "class": "Linear",
             "args": {
-                "in_features": 512,
-                "out_features": 512
+                "in_features": 1024,
+                "out_features": 1024
             }
         },
         {
@@ -131,13 +131,13 @@ config = {
         {
             "class": "Linear",
             "args": {
-                "in_features": 512,
-                "out_features": 1
+                "in_features": 1024,
+                "out_features": 502
             }
         }
     ],
     'loss_function': {
-        'name': 'MSELoss',
+        'name': 'CrossEntropyLoss',
         'args': {}
     },
     'optimizer': {
@@ -146,5 +146,5 @@ config = {
             'lr': 0.001
         }
     },
-    'epochs': 100
+    'epochs': 15
 }

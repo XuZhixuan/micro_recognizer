@@ -64,7 +64,7 @@ class SummaryServiceProvider(ServiceProvider):
 class ImageLoaderServiceProvider(ServiceProvider):
     def register(self):
         from Tools import ImageLoader
-        self.app.singleton(ImageLoader, ImageLoader(self.app))
+        self.app.singleton(ImageLoader, ImageLoader(self.app, size=(256, 256)))
 
     def boot(self):
         pass
@@ -89,10 +89,12 @@ class DataServicesProvider(ServiceProvider):
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
         from Modules import Network
-        self.app.singleton(Network, Network(
-            self.app,
-            self.app.config('training.define'),
-        ))
+        from torch.nn import DataParallel
+
+        model = Network(self.app, self.app.config('training.define')).cuda(0)
+        model = DataParallel(model, device_ids=[0, 1, 2, 3])
+
+        self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
 
     def boot(self):

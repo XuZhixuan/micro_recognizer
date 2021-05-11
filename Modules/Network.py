@@ -1,5 +1,7 @@
-from torch.nn import Module, Sequential
 from typing import List, Dict
+
+from torch.nn import Module, Sequential
+
 from container import Container
 
 
@@ -37,7 +39,7 @@ class Network(Module):
             layer = self._make_layer(config['class'], config['args'])
             layers.append(layer)
 
-        self.net = Sequential(*layers).cuda()
+        self.net = Sequential(*layers)
 
     def forward(self, x):
         return self.net(x)

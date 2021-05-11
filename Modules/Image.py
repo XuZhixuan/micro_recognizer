@@ -1,3 +1,8 @@
+from typing import Union, Optional
+
+from torch import Tensor
+
+
 class Image:
     """ Image Class
     Image & basic attributes stored
@@ -10,7 +15,14 @@ class Image:
         thermal: Thermal Conductivity (W·m/K)
     """
 
-    def __init__(self, path, rgb, grayscale, percentage, thermal):
+    def __init__(
+            self,
+            path: str,
+            rgb: Optional[Tensor],
+            grayscale: Optional[Tensor],
+            percentage: float,
+            thermal: Union[float, Tensor]
+    ):
         self.path = path
         self.rgb = rgb
         self.grayscale = grayscale
