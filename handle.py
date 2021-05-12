@@ -65,8 +65,7 @@ class Handler:
                 out = torch.softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
                 _, out = torch.max(out, 1)
-                for i in out.tolist():
-                    pred.extend(i)
+                pred.extend(out.tolist())
                 val_loss += loss.data.item()
                 val_correct += torch.eq(out, y).sum().item()
 

@@ -92,7 +92,7 @@ class NetworkServiceProvider(ServiceProvider):
         from torch.nn import DataParallel
 
         model = Network(self.app, self.app.config('training.define')).cuda(0)
-        model = DataParallel(model, device_ids=[0, 1, 2, 3])
+        # model = DataParallel(model, device_ids=[0, 1, 2])
 
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')

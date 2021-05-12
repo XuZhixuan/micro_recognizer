@@ -141,7 +141,7 @@ config = {
         'args': {}
     },
     'optimizer': {
-        'name': 'Adam',
+        'name': 'SGD',
         'args': {
             'lr': 0.001
         }
