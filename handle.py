@@ -59,7 +59,8 @@ class Handler:
                 x, y = datum
                 out = self.app.model(x.cuda())
                 loss = self.app.loss_function(out, y)
-                pred.append(y.item())
+                for i in out.tolist():
+                    pred.extend(i)
                 val_loss += loss.data.item()
                 r2score.update((out, y))
 
