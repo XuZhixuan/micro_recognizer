@@ -23,7 +23,7 @@ class ImageLoader:
         self.app = app
         self.loader = transforms.Compose([
             transforms.ToTensor(),
-            # transforms.Normalize()
+            transforms.Normalize()
         ])
 
     def __call__(self, *args):

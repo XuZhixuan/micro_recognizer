@@ -74,6 +74,6 @@ class Handler:
             self.summary(epoch, y_data, pred)
 
     def run(self):
-        self.app.network_summary(self.app.model, (1, 487, 487))
+        self.app.network_summary(self.app.model, (1, 100, 100))
         self.create_dataset()
         self.train_network(self.app.config('training.epochs'))
