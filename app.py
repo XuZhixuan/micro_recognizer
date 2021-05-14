@@ -1,6 +1,7 @@
 from Services import *
 from container import Container
 from handle import Handler
+from debug import DebugHandler
 from helper import check_dir
 
 
@@ -17,7 +18,7 @@ class Application(Container):
         self.register_base_services()
 
         self.register_user_services()
-        self.singleton('handler', Handler(self))
+        self.singleton('handler', DebugHandler(self))
 
     def register_base_bindings(self):
         """

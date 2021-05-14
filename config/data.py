@@ -7,8 +7,12 @@ config = {
     },
     'source': SavedSource,
     'kwargs': {
-        'dir_name': './storage/saves/1/'
+        'dir_name': './storage/saves/20210514T003950/'
     },
+    # 'source': FileSource,
+    # 'kwargs': {
+    #     'dir_name': './storage/zips/'
+    # },
     'cache': './storage/cache/'
     # 'source': DBSource,
     # 'kwargs': {

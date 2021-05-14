@@ -3,3 +3,4 @@
 */__pycache__
 !.gitkeep
 *.json
+debug.py

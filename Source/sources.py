@@ -116,6 +116,9 @@ class FileSource(Source):
         # 加载列表分块
         self._chunks = list(self.app.helper.list_chunk(manifest, self._chunk_size))
 
+        sorted_target = sorted(list(map(lambda x: x[4], manifest)))
+        a = [n for n in sorted_target if 20.5 < n < 20.52]
+
         if self._dumping:
             self.chunks_dump()
 
@@ -125,7 +128,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            file.extract(name, path='./storage/images')
+            # file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(
