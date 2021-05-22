@@ -15,21 +15,23 @@ class Handler:
 
     def create_dataset(self):
         train_set, validate_set = train_test_split(self.app.source, 0.1)
-        self.train_set = DataLoader(train_set, batch_size=4)
-        self.validate_set = DataLoader(validate_set, batch_size=4)
+        self.train_set = DataLoader(train_set, batch_size=8)
+        self.validate_set = DataLoader(validate_set, batch_size=8)
 
-    def summary(self, epoch: int, y_data: list, pred: list):
-        save(self.app.model, './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pt')
-        plot.plot(y_data, pred)
-        plot.savefig('./storage/logs/' + self.app.helper.time_name() + str(epoch) + '.png')
-
-    def train_network(self, epochs):
-        import os
-        os.mkdir('./storage/logs/summary/' + self.app.helper.time_name())
-        os.mkdir('./storage/bin/' + self.app.helper.time_name())
+    def run(self):
+        self.app.network_summary(self.app.model, (1, 256, 256))
+        self.create_dataset()
         y_tmp = list(map(lambda k: k[1].tolist(), self.validate_set))
-        y_data = [item for batch in y_tmp for item in batch]
-        for epoch in range(epochs):
+        y_data = [datum for batch in y_tmp for item in batch for datum in item]
+
+        def summary(epoch: int, pred: list):
+            save(self.app.model, './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pt')
+            plot.plot(y_data, pred, '.')
+            plot.plot(y_data, y_data, '-')
+            plot.savefig('./storage/logs/plots/' + self.app.helper.time_name() + '/result-' + str(epoch) + '.png')
+            plot.cla()
+
+        def train_network(epoch):
             print('Epoch: %d' % epoch)
             self.app.model.train()
             train_loss = 0.
@@ -47,8 +49,9 @@ class Handler:
             train_loss /= len(self.train_set)
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
-            print('Train finished, loss=%f' % train_loss, end='')
+            print('Train finished, loss=%f' % train_loss, end=' ')
 
+        def validate_network(epoch):
             # Start validating
             self.app.model.eval()
             val_loss = 0.
@@ -71,9 +74,14 @@ class Handler:
             self.app.train_summary.add_scalar('test_r2', r2score.compute(), epoch)
             self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
 
-            self.summary(epoch, y_data, pred)
+            summary(epoch, pred)
 
-    def run(self):
-        self.app.network_summary(self.app.model, (1, 100, 100))
-        self.create_dataset()
-        self.train_network(self.app.config('training.epochs'))
+        def before():
+            import os
+            os.mkdir('./storage/logs/plots/' + self.app.helper.time_name())
+            os.mkdir('./storage/bin/' + self.app.helper.time_name())
+
+        before()
+        for e in range(self.app.config('training.epochs')):
+            train_network(e)
+            validate_network(e)

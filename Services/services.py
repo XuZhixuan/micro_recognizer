@@ -1,5 +1,7 @@
 from abc import abstractmethod
 
+from torch.nn import DataParallel
+
 from container import Container
 
 
@@ -50,8 +52,13 @@ class LayerMakeServiceProvider(ServiceProvider):
 class SummaryServiceProvider(ServiceProvider):
     def register(self):
         from torch.utils.tensorboard import SummaryWriter
+        import os
+
+        dir_name = self.app.config('logs.summary.dir') + self.app.helper.time_name() + '/'
+        os.mkdir(dir_name)
+
         self.app.singleton('train_summary', SummaryWriter(
-            self.app.config('logs.summary.dir')
+            dir_name
         ))
 
         from torchsummary import summary
@@ -64,7 +71,7 @@ class SummaryServiceProvider(ServiceProvider):
 class ImageLoaderServiceProvider(ServiceProvider):
     def register(self):
         from Tools import ImageLoader
-        self.app.singleton(ImageLoader, ImageLoader(self.app))
+        self.app.singleton(ImageLoader, ImageLoader(self.app, size=(256, 256)))
 
     def boot(self):
         pass
@@ -88,13 +95,12 @@ class DataServicesProvider(ServiceProvider):
 
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
-        from torch.nn import DataParallel
         from Modules import Network
         model = Network(
             self.app,
             self.app.config('training.define'),
         )
-        # model = DataParallel(model, device_ids=[0, 1, 2, 3])
+        model = DataParallel(model, device_ids=[0, 1, 2, 3])
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
 

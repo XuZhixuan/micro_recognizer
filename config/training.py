@@ -9,39 +9,39 @@ config = {
                 "stride": 2
             }
         },
+        # {
+        #     "class": "BatchNorm2d",
+        #     "args": {
+        #         "num_features": 64
+        #     }
+        # },
         {
-            "class": "BatchNorm2d",
-            "args": {
-                "num_features": 64
-            }
-        },
-        {
-            "class": "ReLU",
+            "class": "LeakyReLU",
             "args": {
                 "inplace": True
             }
         },
 
-        {
-            "class": "Conv2d",
-            "args": {
-                "in_channels": 64,
-                "out_channels": 64,
-                "kernel_size": 3
-            }
-        },
-        {
-            "class": "BatchNorm2d",
-            "args": {
-                "num_features": 64
-            }
-        },
-        {
-            "class": "ReLU",
-            "args": {
-                "inplace": True
-            }
-        },
+        # {
+        #     "class": "Conv2d",
+        #     "args": {
+        #         "in_channels": 64,
+        #         "out_channels": 64,
+        #         "kernel_size": 3
+        #     }
+        # },
+        # {
+        #     "class": "BatchNorm2d",
+        #     "args": {
+        #         "num_features": 64
+        #     }
+        # },
+        # {
+        #     "class": "LeakyReLU",
+        #     "args": {
+        #         "inplace": True
+        #     }
+        # },
         {
             "class": "MaxPool2d",
             "args": {
@@ -57,38 +57,38 @@ config = {
                 "stride": 2
             }
         },
+        # {
+        #     "class": "BatchNorm2d",
+        #     "args": {
+        #         "num_features": 128
+        #     }
+        # },
         {
-            "class": "BatchNorm2d",
-            "args": {
-                "num_features": 128
-            }
-        },
-        {
-            "class": "ReLU",
-            "args": {
-                "inplace": True
-            }
-        },
-        {
-            "class": "Conv2d",
-            "args": {
-                "in_channels": 128,
-                "out_channels": 128,
-                "kernel_size": 3
-            }
-        },
-        {
-            "class": "BatchNorm2d",
-            "args": {
-                "num_features": 128
-            }
-        },
-        {
-            "class": "ReLU",
+            "class": "LeakyReLU",
             "args": {
                 "inplace": True
             }
         },
+        # {
+        #     "class": "Conv2d",
+        #     "args": {
+        #         "in_channels": 128,
+        #         "out_channels": 128,
+        #         "kernel_size": 3
+        #     }
+        # },
+        # {
+        #     "class": "BatchNorm2d",
+        #     "args": {
+        #         "num_features": 128
+        #     }
+        # },
+        # {
+        #     "class": "LeakyReLU",
+        #     "args": {
+        #         "inplace": True
+        #     }
+        # },
         {
             "class": "MaxPool2d",
             "args": {
@@ -104,21 +104,40 @@ config = {
                 "stride": 2
             }
         },
+        # {
+        #     "class": "BatchNorm2d",
+        #     "args": {
+        #         "num_features": 256
+        #     }
+        # },
         {
-            "class": "BatchNorm2d",
-            "args": {
-                "num_features": 256
-            }
-        },
-        {
-            "class": "ReLU",
+            "class": "LeakyReLU",
             "args": {
                 "inplace": True
             }
         },
         {
+            "class": "MaxPool2d",
+            "args": {
+                "kernel_size": 2
+            }
+        },
+        {
             "class": "Flatten",
             "args": {}
+        },
+        {
+            "class": "Linear",
+            "args": {
+                "in_features": 2304,
+                "out_features": 512
+            }
+        },
+        {
+            "class": "LeakyReLU",
+            "args": {
+                "inplace": True
+            }
         },
         {
             "class": "Linear",
@@ -135,8 +154,8 @@ config = {
     'optimizer': {
         'name': 'Adam',
         'args': {
-            'lr': 0.001
+            'lr': 0.004
         }
     },
-    'epochs': 100
+    'epochs': 500
 }
