@@ -1,7 +1,5 @@
 from abc import abstractmethod
 
-from torch.nn import DataParallel
-
 from container import Container
 
 
@@ -96,11 +94,27 @@ class DataServicesProvider(ServiceProvider):
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
         from Modules import Network
-        model = Network(
-            self.app,
-            self.app.config('training.define'),
+        # model = Network(
+        #     self.app,
+        #     self.app.config('training.define'),
+        # )
+        # model = DataParallel(model, device_ids=[0, 1, 2, 3])
+        from torchvision import models
+        from torch import nn
+        # from torch.nn import DataParallel
+        model = models.resnet18(pretrained=True)
+        model.conv1 = nn.Conv2d(
+            in_channels=1,
+            out_channels=model.conv1.out_channels,
+            kernel_size=model.conv1.kernel_size,
+            stride=model.conv1.stride,
+            padding=model.conv1.padding,
+            bias=model.conv1.bias
         )
-        model = DataParallel(model, device_ids=[0, 1, 2, 3])
+        model.fc = nn.Linear(model.fc.in_features, 1)
+        model.cuda()
+        # model = DataParallel(model, device_ids=[0, 1, 2, 3])
+
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
 
