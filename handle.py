@@ -25,7 +25,10 @@ class Handler:
         y_data = [datum for batch in y_tmp for item in batch for datum in item]
 
         def summary(epoch: int, pred: list):
-            save(self.app.model, './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pt')
+            save(
+                self.app.model.state_dict(),
+                './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pth'
+            )
             plot.plot(y_data, pred, '.')
             plot.plot(y_data, y_data, '-')
             plot.savefig('./storage/logs/plots/' + self.app.helper.time_name() + '/result-' + str(epoch) + '.png')
@@ -85,3 +88,8 @@ class Handler:
         for e in range(self.app.config('training.epochs')):
             train_network(e)
             validate_network(e)
+
+        save(
+            self.app.model,
+            './storage/bin/' + self.app.helper.time_name() + '/model.pth'
+        )
