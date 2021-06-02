@@ -1,5 +1,7 @@
 from abc import abstractmethod
 
+import torch
+
 from container import Container
 
 
@@ -50,8 +52,13 @@ class LayerMakeServiceProvider(ServiceProvider):
 class SummaryServiceProvider(ServiceProvider):
     def register(self):
         from torch.utils.tensorboard import SummaryWriter
+        import os
+
+        dir_name = self.app.config('logs.summary.dir') + self.app.helper.time_name() + '/'
+        os.mkdir(dir_name)
+
         self.app.singleton('train_summary', SummaryWriter(
-            self.app.config('logs.summary.dir')
+            dir_name
         ))
 
         from torchsummary import summary
@@ -64,7 +71,7 @@ class SummaryServiceProvider(ServiceProvider):
 class ImageLoaderServiceProvider(ServiceProvider):
     def register(self):
         from Tools import ImageLoader
-        self.app.singleton(ImageLoader, ImageLoader(self.app))
+        self.app.singleton(ImageLoader, ImageLoader(self.app, size=(256, 256)))
 
     def boot(self):
         pass
@@ -89,10 +96,31 @@ class DataServicesProvider(ServiceProvider):
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
         from Modules import Network
-        self.app.singleton(Network, Network(
-            self.app,
-            self.app.config('training.define'),
-        ))
+        # model = Network(
+        #     self.app,
+        #     self.app.config('training.define'),
+        # )
+        # model = DataParallel(model, device_ids=[0, 1, 2, 3])
+
+        # from torchvision import models
+        # from torch import nn
+        # from torch.nn import DataParallel
+        # model = models.resnet18(pretrained=True)
+        # model.conv1 = nn.Conv2d(
+        #     in_channels=1,
+        #     out_channels=model.conv1.out_channels,
+        #     kernel_size=model.conv1.kernel_size,
+        #     stride=model.conv1.stride,
+        #     padding=model.conv1.padding,
+        #     bias=model.conv1.bias
+        # )
+        # model.fc = nn.Linear(model.fc.in_features, 1)
+        # model.cuda()
+        # model = DataParallel(model, device_ids=[0, 1, 2, 3])
+
+        model = torch.load('./storage/bin/model-best.pth').cuda()
+
+        self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
 
     def boot(self):

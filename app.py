@@ -1,3 +1,5 @@
+import torch
+
 from Services import *
 from container import Container
 from handle import Handler
@@ -13,6 +15,8 @@ class Application(Container):
         """
         Init the application instance
         """
+        check_dir()
+
         self.register_base_bindings()
         self.register_base_services()
 
@@ -76,9 +80,25 @@ class Application(Container):
     def handle(self):
         self.handler.run()
 
+    def single_run(self, data):
+        import base64
+        import re
+        from io import BytesIO
+        from PIL import Image
+        from Tools import ImageLoader
+
+        image = re.sub('^data:image/.+;base64,', '', data)
+        image = base64.b64decode(image)
+        image = BytesIO(image)
+        image = Image.open(image)
+
+        loader = self.resolve(ImageLoader)
+        x = loader.pre_process(image, (24, 25, 1024 - 26, 1024 - 25)).unsqueeze(0)
+        y = self.model(x).item()
+        return self.config('data.bound.low') + y * self.config('data.bound.inter')
+
 
 def run():
-    check_dir()
     app = Application()
     app.handle()
 

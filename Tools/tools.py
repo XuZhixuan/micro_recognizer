@@ -1,7 +1,7 @@
 from typing import Union, Tuple, List
 
 import numpy
-from PIL import Image
+from PIL import Image, ImageDraw
 from torch import from_numpy
 from torch import nn
 from torch import optim
@@ -53,7 +53,7 @@ class ImageLoader:
             image: An image instance
         """
         # image = Image.open(path[0])
-        gray = Image.open(path[1])
+        gray = Image.open(path[0])
         return Modules.Image(
             path=origin,
             rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
@@ -112,10 +112,24 @@ class ImageLoader:
 
         if self.size:
             if isinstance(self.size, tuple):
-                new_img = new_img.resize(self.size, Image.ANTIALIAS)
+                size = self.size
             elif isinstance(self.size, float):
-                new_img = new_img.resize(
-                    (int(shape[0] * self.size), int(shape[1] * self.size)), Image.ANTIALIAS)
+                size = (int(shape[0] * self.size), int(shape[1] * self.size))
+            else:
+                raise TypeError('Expected size to be float or tuple, %s got, why ???' % type(self.size))
+
+            new_img = new_img.resize(size, Image.LANCZOS)
+
+        # draw = ImageDraw.Draw(new_img)
+        # for x in range(new_img.size[0]):
+        #     for y in range(new_img.size[1]):
+        #         pix = new_img.getpixel((x, y))
+        #         if pix == 1:
+        #             pass
+        #             draw.point(
+        #                 (x, y),
+        #                 new_img.getpixel((x - 1, y))
+        #             )
 
         return self.loader(new_img).to('cuda')
 

@@ -1,29 +1,22 @@
 from typing import List, Dict, Union, Generator
 
 
-def train_test_split(data, validate_size=0.3, random=False):
+def train_test_split(data, validate_size=0.3):
     """ Split dataset to training set & validation set
 
     Args:
         data: Inputs data of dataset
         validate_size: The ratio of validation set in dataset
-        random: Randomly split dataset
 
     Returns:
         train: Inputs of training set
         validate: Inputs of validation set
     """
 
-    train, validate = None, None
-
-    if random:
-        pass
-        # TODO: Implement random split
-    else:
-        split = len(data) * (1 - validate_size)
-        split = int(split)
-        train = data[:split]
-        validate = data[split:]
+    split = len(data) * (1 - validate_size)
+    split = int(split)
+    train = data[:split]
+    validate = data[split:]
 
     return train, validate
 
@@ -56,11 +49,17 @@ def check_dir():
         print('[   OK   ] Now running in: ', os.getcwd())
 
 
-def time_name():
+def time_name(real: bool = False):
     import datetime
-    return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+    if real:
+        return datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+    else:
+        return start_time
 
 
 def list_chunk(_list: list, size: int) -> Generator:
     for i in range(0, len(_list), size):
         yield _list[i:i + size]
+
+
+start_time = time_name(True)

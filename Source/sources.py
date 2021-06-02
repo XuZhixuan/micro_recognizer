@@ -33,29 +33,17 @@ class Source(ABC):
             raise StopIteration
         return self[index]
 
-    def __getitem__(self, item):
-        if isinstance(item, slice):
-            if isinstance(self, SavedSource):
-                chunks = len(self._chunks)
-                start = 0 if item.start is None else item.start
-                stop = 0 if item.stop is None else item.stop
-                _start = int(start / self.length * chunks)
-                _stop = int((stop - start) / self.length * chunks) + start
-                new_chunks = self._chunks[_start:_stop]
-                source = SavedSource(self.app, self.path)
-                source._chunks = new_chunks
-                source.length = sum(map(lambda x: x[1], new_chunks))
-                return source
+    def _slice_impl(self, item):
+        full_list = []
+        for chunk in self._chunks:
+            full_list.extend(chunk)
+        new_list = full_list[item.start:item.stop]
+        source = Source(self.app)
+        source._chunks = list(self.app.helper.list_chunk(new_list, self._chunk_size))
+        source.length = len(new_list)
+        return source
 
-            full_list = []
-            for chunk in self._chunks:
-                full_list.extend(chunk)
-            new_list = full_list[item.start:item.stop]
-            source = Source(self.app)
-            source._chunks = list(self.app.helper.list_chunk(new_list, self._chunk_size))
-            source.length = len(new_list)
-            return source
-
+    def _item_impl(self, item):
         if self._chunk == -1 or self._chunk != int(item / self._chunk_size):
             self._chunk = int(item / self._chunk_size)
             self.data = self.loader(
@@ -65,6 +53,11 @@ class Source(ABC):
         image = self.data[item % self._chunk_size]
 
         return image.grayscale, image.thermal
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return self._slice_impl(item)
+        return self._item_impl(item)
 
     def __len__(self):
         return self.length
@@ -125,7 +118,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            file.extract(name, path='./storage/images')
+            # file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(
@@ -298,15 +291,64 @@ class SavedSource(Source):
         self.fetch()
         self.loader = self.load_chunk
 
+    def refresh(self):
+        length = 0
+        for chunk in self._chunks:
+            length += chunk[1] - chunk[2]
+        self.length = length
+        self._chunk = -1
+        self.data = []
+        return self
+
     def fetch(self):
         meta = self.app.helper.load_json(self.path + '/meta.json')
+        self._chunks = []
         for chunk_desc in meta:
-            self._chunks.append(tuple(chunk_desc))
+            self._chunks.append(tuple(chunk_desc) + (0,))
             self.length += chunk_desc[1]
 
     def load_chunk(self, chunk_desc):
-        with open(self.path + '/' + chunk_desc[0], 'rb') as bin_file:
-            return pickle.load(bin_file)
+        return self.load(self.path + '/' + chunk_desc[0])
+
+    def locate_chunk(self, item):
+        for _i, _chunk in enumerate(self._chunks):
+            item -= _chunk[1] - _chunk[2]
+            if item < 0:
+                return _i, item + _chunk[1]
+
+    def _slice_impl(self, item):
+        new_source = SavedSource(self.app, self.path)
+        if item.start is None:
+            start_chunk, start_offset = 0, self._chunks[0][2]
+        else:
+            start_chunk, start_offset = self.locate_chunk(item.start)
+
+        if item.stop is None:
+            stop_chunk, stop_offset = len(self._chunks) - 1, self._chunks[-1][1]
+        else:
+            stop_chunk, stop_offset = self.locate_chunk(item.stop)
+            if stop_offset == 0:
+                stop_chunk -= 1
+                stop_offset = self._chunks[stop_chunk][1]
+
+        new_chunks = list(map(lambda x: list(x), self._chunks[start_chunk:stop_chunk + 1]))
+        new_chunks[0][2] = start_offset
+        new_chunks[-1][1] = stop_offset
+        new_source._chunks = list(map(lambda x: tuple(x), new_chunks))
+        new_source.refresh()
+
+        return new_source
+
+    def _item_impl(self, item):
+        chunk, offset = self.locate_chunk(item)
+
+        if self._chunk == -1 or self._chunk != chunk:
+            self._chunk = chunk
+            self.loader(self._chunks[self._chunk])
+
+        image = self.data[offset]
+
+        return image.grayscale, image.thermal
 
 
 class TestSource(Source):
