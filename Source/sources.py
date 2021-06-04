@@ -106,11 +106,25 @@ class FileSource(Source):
 
         self.length = len(manifest)
 
+        sorted_target = sorted(list(map(lambda x: x[4], manifest)))
+        bounds = sorted_target[::int(
+            self.length / self.app.config('data.num_class')
+        )]
+
+        def get_class(origin):
+            for i, low in enumerate(bounds):
+                if i == len(bounds) - 1:
+                    return i
+                if low <= origin < bounds[i + 1]:
+                    return i
+
+            return -1
+
+        for material in manifest:
+            material[4] = get_class(material[4])
+
         # 加载列表分块
         self._chunks = list(self.app.helper.list_chunk(manifest, self._chunk_size))
-
-        sorted_target = sorted(list(map(lambda x: x[4], manifest)))
-        a = [n for n in sorted_target if 20.5 < n < 20.52]
 
         if self._dumping:
             self.chunks_dump()
@@ -121,7 +135,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            # file.extract(name, path='./storage/images')
+            file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(
@@ -139,13 +153,13 @@ class FileSource(Source):
         manifest = []
         for i, result in enumerate(results, start):
             result = result.split()
-            manifest.append((
+            manifest.append([
                 file.filename + ':{GS|RGB}' + str(i) + '.png',
                 './storage/images/' + dir_name + '/GS' + str(i) + '.png',
                 './storage/images/' + dir_name + '/RGB' + str(i) + '.png',
                 float(result[0]),
                 float(result[1]),
-            ))
+            ])
 
         return manifest
 

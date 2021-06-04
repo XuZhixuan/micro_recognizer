@@ -40,7 +40,7 @@ class Handler:
             train_correct = 0
             for _, datum in enumerate(self.train_set):
                 x, y = datum
-                out = self.app.model(x.cuda())
+                out = self.app.model(x)
                 out = softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
                 _, out = max(out, 1)
@@ -67,7 +67,7 @@ class Handler:
             pred = []
             for _, datum in enumerate(self.validate_set):
                 x, y = datum
-                out = self.app.model(x.cuda())
+                out = self.app.model(x)
                 out = softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
                 _, out = max(out, 1)

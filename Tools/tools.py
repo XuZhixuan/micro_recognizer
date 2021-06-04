@@ -10,6 +10,8 @@ from torchvision import transforms
 import Modules
 from container import Container
 
+import numpy as np
+
 LoadList = List[Tuple[str, str, str, float, float]]
 
 
@@ -59,24 +61,8 @@ class ImageLoader:
             rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
             grayscale=self.pre_process(gray, box),
             percentage=float(percentage),
-            thermal=self.classify(
-                float(thermal),
-                500
-            )
+            thermal=from_numpy(np.array(thermal)).long().unsqueeze(0).cuda()
         )
-
-    def classify(self, y: float, length: int) -> Tensor:
-        import numpy as np
-        low = self.app.config('data.bound.low')
-        inter = self.app.config('data.bound.inter')
-        if y <= low:
-            cls = 0
-        elif y >= low + inter:
-            cls = length + 1
-        else:
-            cls = int((y - low) / inter * length)
-
-        return from_numpy(np.array(cls)).long().unsqueeze(0).cuda()
 
     def loads(self, manifest: LoadList) -> list:
         """ Load images from a paths list
