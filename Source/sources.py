@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 import re
@@ -91,6 +92,7 @@ class FileSource(Source):
         self.fetch()
 
     def fetch(self):
+        import math
         # Detect the zip files presented in given dir
         zip_files = []
         for file in os.listdir(self.dir_name):
@@ -107,7 +109,7 @@ class FileSource(Source):
         self.length = len(manifest)
 
         sorted_target = sorted(list(map(lambda x: x[4], manifest)))
-        bounds = sorted_target[::int(
+        bounds = sorted_target[::math.ceil(
             self.length / self.app.config('data.num_class')
         )]
 
@@ -135,7 +137,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            file.extract(name, path='./storage/images')
+            # file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(

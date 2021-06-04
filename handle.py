@@ -57,7 +57,10 @@ class Handler:
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
             self.app.train_summary.add_scalar('Train_acc', train_acc, epoch)
+            self.app.train_summary.add_scalar('LearningRate', self.app.lr_scheduler.get_last_lr(), epoch)
             print('Train finished, loss=%f, acc=%f' % (train_loss, train_acc), end=' ')
+
+            self.app.lr_scheduler.step()
 
         def validate_network(epoch):
             # Start validating
@@ -92,7 +95,7 @@ class Handler:
 
         before()
         for e in range(self.app.config('training.epochs')):
-            train_network(e)
+            # train_network(e)
             validate_network(e)
 
         save(

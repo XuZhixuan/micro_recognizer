@@ -135,3 +135,14 @@ class RedirectPrintServiceProvider(ServiceProvider):
     def boot(self):
         import sys
         sys.stdout = self.app.redirect_print
+
+
+class LRScheduleServiceProvider(ServiceProvider):
+    def register(self):
+        from torch.optim import lr_scheduler
+        scheduler = lr_scheduler.ExponentialLR(self.app.optimizer, 0.95)
+
+        self.app.singleton('lr_scheduler', scheduler)
+
+    def boot(self):
+        pass
