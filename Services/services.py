@@ -50,8 +50,13 @@ class LayerMakeServiceProvider(ServiceProvider):
 class SummaryServiceProvider(ServiceProvider):
     def register(self):
         from torch.utils.tensorboard import SummaryWriter
+        import os
+
+        dir_name = self.app.config('logs.summary.dir') + self.app.helper.time_name() + '/'
+        os.mkdir(dir_name)
+
         self.app.singleton('train_summary', SummaryWriter(
-            self.app.config('logs.summary.dir')
+            dir_name
         ))
 
         from torchsummary import summary
@@ -89,10 +94,11 @@ class DataServicesProvider(ServiceProvider):
 class NetworkServiceProvider(ServiceProvider):
     def register(self):
         from Modules import Network
-        from torch.nn import DataParallel
+        import torch
 
-        model = Network(self.app, self.app.config('training.define')).cuda(0)
-        # model = DataParallel(model, device_ids=[0, 1, 2])
+        model = torch.load('./storage/bin/model-best.pth').cuda()
+
+        model = torch.nn.DataParallel(model, [0, 1])
 
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')

@@ -1,5 +1,5 @@
-import torch
-from torch import save
+import matplotlib.pyplot as plot
+from torch import save, max, softmax, eq
 from torch.utils.data.dataloader import DataLoader
 
 from container import Container
@@ -14,21 +14,26 @@ class Handler:
 
     def create_dataset(self):
         train_set, validate_set = train_test_split(self.app.source, 0.1)
-        self.train_set = DataLoader(train_set, batch_size=4)
-        self.validate_set = DataLoader(validate_set, batch_size=4)
+        self.train_set = DataLoader(train_set, batch_size=8)
+        self.validate_set = DataLoader(validate_set, batch_size=8)
 
-    def summary(self, epoch: int, pred: list):
-        save(self.app.model, './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pt')
-        self.app.helper.dump_json(
-            './storage/logs/summary/' + self.app.helper.time_name() + '/pred-' + str(epoch) + '.json',
-            pred
-        )
+    def run(self):
+        self.app.network_summary(self.app.model, (1, 256, 256))
+        self.create_dataset()
+        y_tmp = list(map(lambda k: k[1].tolist(), self.validate_set))
+        y_data = [datum for batch in y_tmp for item in batch for datum in item]
 
-    def train_network(self, epochs):
-        import os
-        os.mkdir('./storage/bin/' + self.app.helper.time_name())
-        os.mkdir('./storage/logs/summary/' + self.app.helper.time_name())
-        for epoch in range(epochs):
+        def summary(epoch: int, pred: list):
+            save(
+                self.app.model.state_dict(),
+                './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pth'
+            )
+            plot.plot(y_data, pred, '.')
+            plot.plot(y_data, y_data, '-')
+            plot.savefig('./storage/logs/plots/' + self.app.helper.time_name() + '/result-' + str(epoch) + '.png')
+            plot.cla()
+
+        def train_network(epoch):
             print('Epoch: %d' % epoch)
             self.app.model.train()
             train_loss = 0.
@@ -36,11 +41,11 @@ class Handler:
             for _, datum in enumerate(self.train_set):
                 x, y = datum
                 out = self.app.model(x.cuda())
-                out = torch.softmax(out, 1)
+                out = softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
-                _, out = torch.max(out, 1)
+                _, out = max(out, 1)
                 train_loss += loss.data.item()
-                train_correct += torch.eq(y, out).sum().item()
+                train_correct += eq(y, out).sum().item()
 
                 # Optimize the params in network
                 self.app.optimizer.zero_grad()
@@ -54,6 +59,7 @@ class Handler:
             self.app.train_summary.add_scalar('Train_acc', train_acc, epoch)
             print('Train finished, loss=%f, acc=%f' % (train_loss, train_acc), end=' ')
 
+        def validate_network(epoch):
             # Start validating
             self.app.model.eval()
             val_loss = 0.
@@ -62,12 +68,12 @@ class Handler:
             for _, datum in enumerate(self.validate_set):
                 x, y = datum
                 out = self.app.model(x.cuda())
-                out = torch.softmax(out, 1)
+                out = softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
-                _, out = torch.max(out, 1)
+                _, out = max(out, 1)
                 pred.extend(out.tolist())
                 val_loss += loss.data.item()
-                val_correct += torch.eq(out, y).sum().item()
+                val_correct += eq(out, y).sum().item()
 
             val_loss /= len(self.validate_set)
             val_acc = val_correct / len(self.validate_set)
@@ -77,9 +83,19 @@ class Handler:
             self.app.train_summary.add_scalar('Test_acc', val_acc, epoch)
             self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
 
-            self.summary(epoch, pred)
+            summary(epoch, pred)
 
-    def run(self):
-        self.app.network_summary(self.app.model, (1, 256, 256))
-        self.create_dataset()
-        self.train_network(self.app.config('training.epochs'))
+        def before():
+            import os
+            os.mkdir('./storage/logs/plots/' + self.app.helper.time_name())
+            os.mkdir('./storage/bin/' + self.app.helper.time_name())
+
+        before()
+        for e in range(self.app.config('training.epochs')):
+            train_network(e)
+            validate_network(e)
+
+        save(
+            self.app.model,
+            './storage/bin/' + self.app.helper.time_name() + '/model.pth'
+        )

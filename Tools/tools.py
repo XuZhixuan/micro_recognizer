@@ -53,7 +53,7 @@ class ImageLoader:
             image: An image instance
         """
         # image = Image.open(path[0])
-        gray = Image.open(path[1])
+        gray = Image.open(path[0])
         return Modules.Image(
             path=origin,
             rgb=None,  # self.pre_process(image, box),  # Not loading rgb image
@@ -124,10 +124,13 @@ class ImageLoader:
 
         if self.size:
             if isinstance(self.size, tuple):
-                new_img = new_img.resize(self.size, Image.ANTIALIAS)
+                size = self.size
             elif isinstance(self.size, float):
-                new_img = new_img.resize(
-                    (int(shape[0] * self.size), int(shape[1] * self.size)), Image.ANTIALIAS)
+                size = (int(shape[0] * self.size), int(shape[1] * self.size))
+            else:
+                raise TypeError('Expected size to be float or tuple, %s got, why ???' % type(self.size))
+
+            new_img = new_img.resize(size, Image.LANCZOS)
 
         return self.loader(new_img).to('cuda')
 

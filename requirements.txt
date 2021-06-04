@@ -7,3 +7,5 @@ PyMySQL~=1.0.2
 torchvision~=0.9.1
 torchsummary~=1.5.1
 matplotlib
+python-socketio~=4.6.1
+aiohttp~=3.7.4.post0
