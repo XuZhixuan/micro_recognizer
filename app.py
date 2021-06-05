@@ -1,5 +1,3 @@
-import torch
-
 from Services import *
 from container import Container
 from handle import Handler
@@ -56,6 +54,7 @@ class Application(Container):
         DataServicesProvider,
         NetworkServiceProvider,
         TrainingServiceProvider,
+        LRScheduleServiceProvider,
         RedirectPrintServiceProvider
     ]
 

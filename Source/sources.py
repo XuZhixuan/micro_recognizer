@@ -137,7 +137,7 @@ class FileSource(Source):
         for i, result in enumerate(results, start):
             result = result.split()
             manifest.append((
-                file.filename + ':GS' + str(i) + '.png',
+                file.filename + ':{GS|RGB}' + str(i) + '.png',
                 './storage/images/' + dir_name + '/GS' + str(i) + '.png',
                 './storage/images/' + dir_name + '/RGB' + str(i) + '.png',
                 float(result[0]),

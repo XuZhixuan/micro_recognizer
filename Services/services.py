@@ -119,6 +119,7 @@ class NetworkServiceProvider(ServiceProvider):
         # model = DataParallel(model, device_ids=[0, 1, 2, 3])
 
         model = torch.load('./storage/bin/model-best.pth').cuda()
+        model = torch.nn.DataParallel(model, [0, 1])
 
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')
@@ -155,3 +156,14 @@ class RedirectPrintServiceProvider(ServiceProvider):
     def boot(self):
         import sys
         sys.stdout = self.app.redirect_print
+
+
+class LRScheduleServiceProvider(ServiceProvider):
+    def register(self):
+        pass
+
+    def boot(self):
+        from torch.optim import lr_scheduler
+        scheduler = lr_scheduler.ExponentialLR(self.app.optimizer, 0.95)
+
+        self.app.singleton('lr_scheduler', scheduler)

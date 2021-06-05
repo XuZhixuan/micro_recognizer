@@ -1,4 +1,5 @@
-import ignite.contrib.metrics.regression as reg
+from ignite.contrib.metrics.regression import R2Score
+from ignite.metrics.root_mean_squared_error import RootMeanSquaredError
 import matplotlib.pyplot as plot
 from torch import save
 from torch.utils.data.dataloader import DataLoader
@@ -50,8 +51,13 @@ class Handler:
                 self.app.optimizer.step()
 
             train_loss /= len(self.train_set)
+
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
+            self.app.train_summary.add_scalar('lr', self.app.lr_scheduler.get_last_lr()[0], epoch)
+
+            self.app.lr_scheduler.step()
+
             print('Train finished, loss=%f' % train_loss, end=' ')
 
         def validate_network(epoch):
@@ -59,7 +65,8 @@ class Handler:
             self.app.model.eval()
             val_loss = 0.
             # Init a R2score instance
-            r2score = reg.R2Score(device='cuda')
+            r2score = R2Score(device='cuda')
+            rmse = RootMeanSquaredError(device='cuda')
             pred = []
             for _, datum in enumerate(self.validate_set):
                 x, y = datum
@@ -69,13 +76,15 @@ class Handler:
                     pred.extend(i)
                 val_loss += loss.data.item()
                 r2score.update((out, y))
+                rmse.update((out, y))
 
             val_loss /= len(self.validate_set)
-            print('Test finished, loss=%f, r2=%f' % (val_loss, r2score.compute()))
+            print('Test finished, loss=%f, r2=%f, rmse=%f' % (val_loss, r2score.compute(), rmse.compute()))
 
             # Log the validate loss & r2 for tensorboard
             self.app.train_summary.add_scalar('test_r2', r2score.compute(), epoch)
             self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
+            self.app.train_summary.add_scalar('test_rmse', rmse.compute(), epoch)
 
             summary(epoch, pred)
 
