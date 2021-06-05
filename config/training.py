@@ -4,9 +4,9 @@ config = {
         'args': {}
     },
     'optimizer': {
-        'name': 'SGD',
+        'name': 'Adam',
         'args': {
-            'lr': 0.004
+            'lr': 0.001
         }
     },
     'epochs': 1000

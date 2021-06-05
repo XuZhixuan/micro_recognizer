@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plot
 from torch import save, max, softmax, eq
 from torch.utils.data.dataloader import DataLoader
 
@@ -20,18 +19,12 @@ class Handler:
     def run(self):
         self.app.network_summary(self.app.model, (1, 256, 256))
         self.create_dataset()
-        y_tmp = list(map(lambda k: k[1].tolist(), self.validate_set))
-        y_data = [datum for batch in y_tmp for item in batch for datum in item]
 
-        def summary(epoch: int, pred: list):
+        def summary(epoch: int):
             save(
                 self.app.model.state_dict(),
                 './storage/bin/' + self.app.helper.time_name() + '/model-' + str(epoch) + '.pth'
             )
-            plot.plot(y_data, pred, '.')
-            plot.plot(y_data, y_data, '-')
-            plot.savefig('./storage/logs/plots/' + self.app.helper.time_name() + '/result-' + str(epoch) + '.png')
-            plot.cla()
 
         def train_network(epoch):
             print('Epoch: %d' % epoch)
@@ -57,7 +50,7 @@ class Handler:
             # Log the train loss for tensorboard
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
             self.app.train_summary.add_scalar('Train_acc', train_acc, epoch)
-            self.app.train_summary.add_scalar('LearningRate', self.app.lr_scheduler.get_last_lr(), epoch)
+            self.app.train_summary.add_scalar('LearningRate', self.app.lr_scheduler.get_last_lr()[0], epoch)
             print('Train finished, loss=%f, acc=%f' % (train_loss, train_acc), end=' ')
 
             self.app.lr_scheduler.step()
@@ -67,14 +60,12 @@ class Handler:
             self.app.model.eval()
             val_loss = 0.
             val_correct = 0
-            pred = []
             for _, datum in enumerate(self.validate_set):
                 x, y = datum
                 out = self.app.model(x)
                 out = softmax(out, 1)
                 loss = self.app.loss_function(out, y.squeeze())
                 _, out = max(out, 1)
-                pred.extend(out.tolist())
                 val_loss += loss.data.item()
                 val_correct += eq(out, y).sum().item()
 
@@ -86,7 +77,7 @@ class Handler:
             self.app.train_summary.add_scalar('Test_acc', val_acc, epoch)
             self.app.train_summary.add_scalar('Test_Loss', val_loss, epoch)
 
-            summary(epoch, pred)
+            summary(epoch)
 
         def before():
             import os
@@ -95,7 +86,7 @@ class Handler:
 
         before()
         for e in range(self.app.config('training.epochs')):
-            # train_network(e)
+            train_network(e)
             validate_network(e)
 
         save(

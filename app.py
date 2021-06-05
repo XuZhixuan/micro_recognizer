@@ -54,6 +54,7 @@ class Application(Container):
         DataServicesProvider,
         NetworkServiceProvider,
         TrainingServiceProvider,
+        LRScheduleServiceProvider,
         RedirectPrintServiceProvider
     ]
 

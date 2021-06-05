@@ -1,4 +1,3 @@
-import math
 import os
 import pickle
 import re
@@ -130,6 +129,10 @@ class FileSource(Source):
 
         if self._dumping:
             self.chunks_dump()
+            self.app.helper.dump_json(
+                self.app.config('data.cache') + self.app.helper.time_name() + '/bounds.json',
+                bounds
+            )
 
     @staticmethod
     def load_list(file: zipfile.ZipFile) -> list:
