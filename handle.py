@@ -20,6 +20,8 @@ class Handler:
         self.app.network_summary(self.app.model, (1, 256, 256))
         self.create_dataset()
 
+        epochs = self.app.config('training.epochs')
+
         def summary(epoch: int):
             save(
                 self.app.model.state_dict(),
@@ -53,7 +55,8 @@ class Handler:
             self.app.train_summary.add_scalar('LearningRate', self.app.lr_scheduler.get_last_lr()[0], epoch)
             print('Train finished, loss=%f, acc=%f' % (train_loss, train_acc), end=' ')
 
-            self.app.lr_scheduler.step()
+            if epoch > 0.8 * epochs:
+                self.app.lr_scheduler.step()
 
         def validate_network(epoch):
             # Start validating
@@ -85,7 +88,7 @@ class Handler:
             os.mkdir('./storage/bin/' + self.app.helper.time_name())
 
         before()
-        for e in range(self.app.config('training.epochs')):
+        for e in range(epochs):
             train_network(e)
             validate_network(e)
 
