@@ -25,6 +25,8 @@ class Handler:
         y_tmp = list(map(lambda k: k[1].tolist(), self.validate_set))
         y_data = [datum for batch in y_tmp for item in batch for datum in item]
 
+        epochs = self.app.config('training.epochs')
+
         def summary(epoch: int, pred: list):
             save(
                 self.app.model.state_dict(),
@@ -41,7 +43,7 @@ class Handler:
             train_loss = 0.
             for _, datum in enumerate(self.train_set):
                 x, y = datum
-                out = self.app.model(x.cuda())
+                out = self.app.model(x)
                 loss = self.app.loss_function(out, y)
                 train_loss += loss.data.item()
 
@@ -56,7 +58,8 @@ class Handler:
             self.app.train_summary.add_scalar('Train_Loss', train_loss, epoch)
             self.app.train_summary.add_scalar('lr', self.app.lr_scheduler.get_last_lr()[0], epoch)
 
-            self.app.lr_scheduler.step()
+            if epoch > 0.8 * epochs:
+                self.app.lr_scheduler.step()
 
             print('Train finished, loss=%f' % train_loss, end=' ')
 
@@ -70,7 +73,7 @@ class Handler:
             pred = []
             for _, datum in enumerate(self.validate_set):
                 x, y = datum
-                out = self.app.model(x.cuda())
+                out = self.app.model(x)
                 loss = self.app.loss_function(out, y)
                 for i in out.tolist():
                     pred.extend(i)
@@ -94,7 +97,7 @@ class Handler:
             os.mkdir('./storage/bin/' + self.app.helper.time_name())
 
         before()
-        for e in range(self.app.config('training.epochs')):
+        for e in range(epochs):
             train_network(e)
             validate_network(e)
 
