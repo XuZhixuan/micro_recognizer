@@ -17,3 +17,13 @@ class Image:
         self.percentage = percentage
         self.thermal = thermal
         pass
+
+    def cuda(self):
+        self.grayscale = self.grayscale.cuda()
+        self.thermal = self.thermal.cuda()
+        return self
+
+    def cpu(self):
+        self.grayscale = self.grayscale.cpu()
+        self.thermal = self.thermal.cpu()
+        return self

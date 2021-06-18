@@ -118,8 +118,8 @@ class NetworkServiceProvider(ServiceProvider):
         # model.cuda()
         # model = DataParallel(model, device_ids=[0, 1, 2, 3])
 
-        model = torch.load('./storage/bin/model-best.pth').cuda()
-        model = torch.nn.DataParallel(model, [0, 1])
+        model = torch.load('./storage/bin/model-best.pth').cpu()  # .cuda()
+        # model = torch.nn.DataParallel(model, [0, 1])
 
         self.app.singleton(Network, model)
         self.app.set_alias(Network, 'model')

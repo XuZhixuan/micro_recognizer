@@ -118,7 +118,7 @@ class FileSource(Source):
         # Determine the first file in zip file
         for name in file.namelist():
             # Extract every file from zip file
-            # file.extract(name, path='./storage/images')
+            file.extract(name, path='./storage/images')
             num = re.search(r'GS(.*)\.png', name)
             if num:
                 nums.append(
@@ -348,7 +348,7 @@ class SavedSource(Source):
 
         image = self.data[offset]
 
-        return image.grayscale, image.thermal
+        return image  # .grayscale, image.thermal
 
 
 class TestSource(Source):
