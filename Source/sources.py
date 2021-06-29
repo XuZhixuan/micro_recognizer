@@ -348,7 +348,7 @@ class SavedSource(Source):
 
         image = self.data[offset]
 
-        return image  # .grayscale, image.thermal
+        return image.grayscale, image.thermal
 
 
 class TestSource(Source):
